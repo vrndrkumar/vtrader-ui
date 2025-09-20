@@ -1,0 +1,89 @@
+[
+  {
+    "id": "broker_001",
+    "name": "Zerodha",
+    "type": "zerodha",
+    "accountId": "ZD1234",
+    "isConnected": true,
+    "lastSyncAt": "2024-01-20T10:30:00.000Z",
+    "syncSettings": {
+      "autoSync": true,
+      "syncIntervalMinutes": 15,
+      "syncOrders": true,
+      "syncPositions": true,
+      "syncHoldings": false,
+      "syncTrades": true,
+      "lastAutoSyncAt": "2024-01-20T10:30:00.000Z",
+      "syncSymbols": []
+    },
+    "metadata": {
+      "tradingSegments": ["equity", "commodity", "currency"],
+      "planType": "unlimited",
+      "brokerage": {
+        "equity": 20.0,
+        "commodity": 20.0,
+        "currency": 20.0
+      }
+    },
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-20T10:30:00.000Z"
+  },
+  {
+    "id": "broker_002",
+    "name": "Upstox",
+    "type": "upstox",
+    "accountId": "UP5678",
+    "isConnected": false,
+    "lastSyncAt": "2024-01-18T16:45:00.000Z",
+    "syncSettings": {
+      "autoSync": false,
+      "syncIntervalMinutes": 30,
+      "syncOrders": true,
+      "syncPositions": true,
+      "syncHoldings": true,
+      "syncTrades": true,
+      "lastAutoSyncAt": null,
+      "syncSymbols": ["NIFTY50", "BANKNIFTY"]
+    },
+    "metadata": {
+      "tradingSegments": ["equity", "derivatives"],
+      "planType": "pro",
+      "brokerage": {
+        "equity": 0.05,
+        "derivatives": 20.0
+      }
+    },
+    "createdAt": "2024-01-05T00:00:00.000Z",
+    "updatedAt": "2024-01-18T16:45:00.000Z"
+  },
+  {
+    "id": "broker_003",
+    "name": "Angel One",
+    "type": "angelone",
+    "accountId": "AO9012",
+    "isConnected": true,
+    "lastSyncAt": "2024-01-20T09:15:00.000Z",
+    "syncSettings": {
+      "autoSync": true,
+      "syncIntervalMinutes": 10,
+      "syncOrders": true,
+      "syncPositions": true,
+      "syncHoldings": false,
+      "syncTrades": true,
+      "lastAutoSyncAt": "2024-01-20T09:15:00.000Z",
+      "syncSymbols": []
+    },
+    "metadata": {
+      "tradingSegments": ["equity", "derivatives", "commodity"],
+      "planType": "basic",
+      "brokerage": {
+        "equity": 15.0,
+        "derivatives": 15.0,
+        "commodity": 15.0
+      }
+    },
+    "createdAt": "2024-01-10T00:00:00.000Z",
+    "updatedAt": "2024-01-20T09:15:00.000Z"
+  }
+]
+

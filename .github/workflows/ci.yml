@@ -1,0 +1,247 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Verify formatting
+      run: dart format --output=none --set-exit-if-changed .
+      
+    - name: Analyze project source
+      run: flutter analyze
+      
+    - name: Generate code
+      run: flutter packages pub run build_runner build --delete-conflicting-outputs
+      
+    - name: Run tests
+      run: flutter test --coverage
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: coverage/lcov.info
+
+  build-web:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Generate code
+      run: flutter packages pub run build_runner build --delete-conflicting-outputs
+      
+    - name: Build web
+      run: flutter build web --release --web-renderer canvaskit
+      
+    - name: Upload web build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: web-build
+        path: build/web/
+
+  build-android:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Generate code
+      run: flutter packages pub run build_runner build --delete-conflicting-outputs
+      
+    - name: Build Android APK
+      run: flutter build apk --release
+      
+    - name: Build Android App Bundle
+      run: flutter build appbundle --release
+      
+    - name: Upload Android build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-build
+        path: |
+          build/app/outputs/flutter-apk/app-release.apk
+          build/app/outputs/bundle/release/app-release.aab
+
+  build-ios:
+    needs: test
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.16.0'
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Generate code
+      run: flutter packages pub run build_runner build --delete-conflicting-outputs
+      
+    - name: Build iOS (no codesign)
+      run: flutter build ios --release --no-codesign
+      
+    - name: Upload iOS build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ios-build
+        path: build/ios/iphoneos/Runner.app
+
+  deploy-web:
+    needs: [test, build-web]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Download web build
+      uses: actions/download-artifact@v3
+      with:
+        name: web-build
+        path: build/web/
+        
+    - name: Deploy to Firebase Hosting
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_VTRADER }}'
+        channelId: live
+        projectId: vtrader-app
+        
+    # Alternative deployment options:
+    # - name: Deploy to Netlify
+    #   uses: nwtgck/actions-netlify@v2.0
+    #   with:
+    #     publish-dir: './build/web'
+    #     production-branch: main
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     deploy-message: "Deploy from GitHub Actions"
+    #   env:
+    #     NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+    #     NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Run security scan
+      uses: securecodewarrior/github-action-add-sarif@v1
+      with:
+        sarif-file: 'security-scan-results.sarif'
+        
+    - name: Dependency vulnerability scan
+      run: |
+        flutter pub deps
+        # Add dependency scanning tools here
+
+  performance-test:
+    needs: build-web
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Download web build
+      uses: actions/download-artifact@v3
+      with:
+        name: web-build
+        path: build/web/
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        
+    - name: Install Lighthouse CI
+      run: npm install -g @lhci/cli@0.12.x
+      
+    - name: Run Lighthouse CI
+      run: |
+        lhci autorun --upload.target=temporary-public-storage
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+  release:
+    needs: [test, build-web, build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release:')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Extract version from pubspec.yaml
+      id: version
+      run: |
+        VERSION=$(grep '^version:' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: Release v${{ steps.version.outputs.version }}
+        body: |
+          ## What's Changed
+          - Check the commit history for detailed changes
+          
+          ## Downloads
+          - Web version is automatically deployed
+          - Android APK and App Bundle are available as build artifacts
+          - iOS build available as build artifact (requires code signing)
+        draft: false
+        prerelease: false
+
