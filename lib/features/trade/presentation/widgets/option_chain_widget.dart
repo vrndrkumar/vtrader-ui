@@ -14,7 +14,12 @@ class OptionChainWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Create a unique key based on option chain data
+    final dataKey = '${optionChain.underlying}_${optionChain.underlyingPrice}_${optionChain.strikes.length}';
+    print('OptionChainWidget build called for ${optionChain.underlying} with ${optionChain.strikes.length} strikes');
+    
     return Container(
+      key: ValueKey(dataKey),
       constraints: const BoxConstraints(minWidth: 300), // Minimum width
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,

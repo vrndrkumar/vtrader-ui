@@ -26,6 +26,7 @@ class _ChartWidgetState extends State<ChartWidget> {
 
   @override
   Widget build(BuildContext context) {
+    print('ChartWidget build called for ${widget.symbol} with ${widget.candleData.length} candles');
     return Container(
       constraints: const BoxConstraints(minWidth: 300, minHeight: 200), // Minimum size
       decoration: BoxDecoration(
@@ -153,6 +154,11 @@ class _ChartWidgetState extends State<ChartWidget> {
       volume: data.volume.toDouble(),
     )).toList();
 
+    // Create a unique key based on symbol and first/last candle data
+    final dataKey = candles.isNotEmpty 
+        ? '${widget.symbol}_${candles.first.close}_${candles.last.close}_${candles.length}'
+        : '${widget.symbol}_empty';
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 400;
@@ -160,6 +166,7 @@ class _ChartWidgetState extends State<ChartWidget> {
         return Padding(
           padding: EdgeInsets.all(isNarrow ? 8 : 16),
           child: Candlesticks(
+            key: ValueKey(dataKey),
             candles: candles,
             onLoadMoreCandles: () async {
               // Placeholder for loading more data

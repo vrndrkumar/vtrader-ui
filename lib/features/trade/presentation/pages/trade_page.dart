@@ -91,6 +91,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
       final orders = _marketDataService.generateMockOrders();
 
       if (mounted) {
+        print('Data loaded for $_selectedIndex: ${candleData.length} candles, ${optionChain.strikes.length} strikes');
         setState(() {
           _optionChain = optionChain;
           _candleData = candleData;
@@ -141,9 +142,15 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
 
   void _onIndexChanged(String newIndex) {
     if (newIndex != _selectedIndex) {
+      print('Index changing from $_selectedIndex to $newIndex');
       setState(() {
         _selectedIndex = newIndex;
         _isLoading = true;
+        // Clear existing data to force complete rebuild
+        _optionChain = null;
+        _candleData = [];
+        _positions = [];
+        _orders = [];
       });
       _loadInitialData();
     }
@@ -152,6 +159,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: ValueKey('trade_page_$_selectedIndex'),
       body: Column(
         children: [
           _buildTopControls(context),
@@ -312,6 +320,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ResizableWidget(
+        key: ValueKey('desktop_layout_$_selectedIndex'),
         isHorizontalSeparator: false, // Vertical split: Left | Right
         separatorColor: Theme.of(context).dividerColor,
         separatorSize: 4,
@@ -328,6 +337,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
           // Left Panel - Option Chain (full height)
           _optionChain != null
               ? OptionChainWidget(
+                  key: ValueKey('option_chain_$_selectedIndex'),
                   optionChain: _optionChain!,
                   onRefresh: _refreshData,
                 )
@@ -335,6 +345,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
           
           // Right Panel - Chart and Positions/Orders (Vertical split)
           ResizableWidget(
+            key: ValueKey('right_panel_$_selectedIndex'),
             isHorizontalSeparator: true, // Horizontal split: Top / Bottom
             separatorColor: Theme.of(context).dividerColor,
             separatorSize: 4,
@@ -350,6 +361,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
             children: [
               // Top Right - Chart
               ChartWidget(
+                key: ValueKey('chart_$_selectedIndex'),
                 candleData: _candleData,
                 symbol: _selectedIndex,
                 onRefresh: _refreshData,
