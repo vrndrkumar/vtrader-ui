@@ -79,28 +79,33 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
     });
 
     try {
+      // Stop previous updates and set new active index
+      _marketDataService.stopPriceUpdates();
       _marketDataService.setActiveIndex(_selectedIndex);
       _marketDataService.startPriceUpdates();
       
+      // Generate fresh data for the selected index
       final optionChain = _marketDataService.generateOptionChain(_selectedIndex);
       final candleData = _marketDataService.generateCandleData(_selectedIndex);
       final positions = _marketDataService.generateMockPositions();
       final orders = _marketDataService.generateMockOrders();
 
-      setState(() {
-        _optionChain = optionChain;
-        _candleData = candleData;
-        _positions = positions;
-        _orders = orders;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
       if (mounted) {
+        setState(() {
+          _optionChain = optionChain;
+          _candleData = candleData;
+          _positions = positions;
+          _orders = orders;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading data: $e')),
+          SnackBar(content: Text('Error loading data for $_selectedIndex: $e')),
         );
       }
     }
@@ -117,12 +122,14 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
   Future<void> _refreshData() async {
     try {
       final optionChain = _marketDataService.generateOptionChain(_selectedIndex);
+      final candleData = _marketDataService.generateCandleData(_selectedIndex);
       final positions = _marketDataService.generateMockPositions();
       final orders = _marketDataService.generateMockOrders();
 
       if (mounted) {
         setState(() {
           _optionChain = optionChain;
+          _candleData = candleData;
           _positions = positions;
           _orders = orders;
         });
@@ -136,6 +143,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
     if (newIndex != _selectedIndex) {
       setState(() {
         _selectedIndex = newIndex;
+        _isLoading = true;
       });
       _loadInitialData();
     }

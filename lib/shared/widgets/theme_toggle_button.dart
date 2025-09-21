@@ -57,14 +57,19 @@ class ThemeToggleButton extends ConsumerWidget {
   }
 
   void _showThemeMenu(BuildContext context, ThemeModeNotifier notifier) {
+    final RenderBox button = context.findRenderObject()! as RenderBox;
+    final RenderBox overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
     showMenu<ThemeMode>(
       context: context,
-      position: RelativeRect.fromLTRB(
-        MediaQuery.of(context).size.width - 200,
-        kToolbarHeight,
-        0,
-        0,
-      ),
+      position: position,
       items: [
         PopupMenuItem(
           value: ThemeMode.light,
