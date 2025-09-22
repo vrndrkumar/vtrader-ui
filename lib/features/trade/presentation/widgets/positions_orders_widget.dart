@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/position_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/user_config_service.dart';
 import '../../data/services/position_service.dart';
 import 'position_card.dart';
 import 'order_card.dart';
@@ -30,7 +31,7 @@ class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
   List<PositionModel> _allPositions = [];
   List<OrderModel> _allOrders = [];
   bool _isLoading = false;
-  bool _useLiveData = false;
+  final UserConfigService _userConfig = UserConfigService();
 
   @override
   void initState() {
@@ -38,6 +39,11 @@ class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
     _mainTabController = TabController(length: 2, vsync: this);
     _positionsTabController = TabController(length: 2, vsync: this);
     _ordersTabController = TabController(length: 3, vsync: this);
+    _initializeAndLoadData();
+  }
+
+  Future<void> _initializeAndLoadData() async {
+    await _userConfig.initialize();
     _loadData();
   }
 
@@ -55,11 +61,13 @@ class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
     });
 
     try {
-      if (_useLiveData) {
+      if (_userConfig.useLiveData) {
         // Load from live API
+        print('Loading live data for user: ${_userConfig.userId}, broker: ${_userConfig.brokerName}');
         _allPositions = await PositionService.fetchPositions();
       } else {
         // Load mock data
+        print('Loading mock data');
         _allPositions = PositionService.getMockPositions();
       }
       _allOrders = PositionService.getMockOrders();
@@ -188,17 +196,16 @@ class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
               Row(
                 children: [
                   IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _useLiveData = !_useLiveData;
-                      });
+                    onPressed: () async {
+                      await _userConfig.toggleLiveData(!_userConfig.useLiveData);
+                      setState(() {});
                       _loadData();
                     },
                     icon: Icon(
-                      _useLiveData ? Icons.cloud_done : Icons.cloud_off,
-                      color: _useLiveData ? AppColors.success : AppColors.neutral,
+                      _userConfig.useLiveData ? Icons.cloud_done : Icons.cloud_off,
+                      color: _userConfig.useLiveData ? AppColors.success : AppColors.neutral,
                     ),
-                    tooltip: _useLiveData ? 'Using Live Data' : 'Using Mock Data',
+                    tooltip: _userConfig.useLiveData ? 'Using Live Data' : 'Using Mock Data',
                   ),
                   IconButton(
                     onPressed: _loadData,
