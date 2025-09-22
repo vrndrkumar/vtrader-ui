@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/option_chain_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'floating_trade_widget.dart';
 
-class OptionChainWidget extends StatelessWidget {
+class OptionChainWidget extends StatefulWidget {
   final OptionChainModel optionChain;
   final VoidCallback? onRefresh;
 
@@ -13,37 +14,148 @@ class OptionChainWidget extends StatelessWidget {
   });
 
   @override
+  State<OptionChainWidget> createState() => _OptionChainWidgetState();
+}
+
+class _OptionChainWidgetState extends State<OptionChainWidget> {
+  String? _hoveredStrike;
+  String? _hoveredSide;
+  double? _hoveredPrice;
+  Offset? _hoverPosition;
+  String? _currentHoveredRow; // Track which row is currently hovered
+
+  @override
   Widget build(BuildContext context) {
     // Create a unique key based on option chain data
-    final dataKey = '${optionChain.underlying}_${optionChain.underlyingPrice}_${optionChain.strikes.length}';
-    print('OptionChainWidget build called for ${optionChain.underlying} with ${optionChain.strikes.length} strikes');
+    final dataKey = '${widget.optionChain.underlying}_${widget.optionChain.underlyingPrice}_${widget.optionChain.strikes.length}';
+    print('OptionChainWidget build called for ${widget.optionChain.underlying} with ${widget.optionChain.strikes.length} strikes');
     
-    return Container(
-      key: ValueKey(dataKey),
-      constraints: const BoxConstraints(minWidth: 300), // Minimum width
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        border: Border.all(
-          color: Theme.of(context).dividerColor,
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
+    return MouseRegion(
+      onExit: (_) {
+        setState(() {
+          _hoveredStrike = null;
+          _hoveredSide = null;
+          _hoveredPrice = null;
+          _hoverPosition = null;
+          _currentHoveredRow = null;
+        });
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          _buildHeader(context),
-          const Divider(height: 1),
-          Expanded(
-            child: _buildOptionChainTable(context),
+          Container(
+            key: ValueKey(dataKey),
+            constraints: const BoxConstraints(minWidth: 300), // Minimum width
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border.all(
+                color: Theme.of(context).dividerColor,
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                _buildHeader(context),
+                const Divider(height: 1),
+                Expanded(
+                  child: _buildOptionChainTable(context),
+                ),
+              ],
+            ),
           ),
+          // Floating trade widget
+          if (_hoveredStrike != null && _hoveredSide != null && _hoveredPrice != null && _hoverPosition != null)
+            Positioned(
+              left: _hoverPosition!.dx,
+              top: _hoverPosition!.dy,
+              child: FloatingTradeWidget(
+                strike: _hoveredStrike!,
+                side: _hoveredSide!,
+                price: _hoveredPrice!,
+                onBuy: () => buyOption(_hoveredStrike!, _hoveredSide!),
+                onSell: () => sellOption(_hoveredStrike!, _hoveredSide!),
+                onChart: () => openChart('${_hoveredStrike!}_${_hoveredSide!}'),
+              ),
+            ),
         ],
       ),
     );
   }
 
+  void buyOption(String strike, String side) {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text("Buy Clicked"),
+          content: Text("Buy $side of Strike $strike"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void sellOption(String strike, String side) {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text("Sell Clicked"),
+          content: Text("Sell $side of Strike $strike"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void openChart(String symbol) {
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text("Chart Clicked"),
+          content: Text("Chart for $symbol"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  void _onRowHover(String strike, String side, double price, Offset position) {
+    final rowKey = '${strike}_$side';
+    
+    // Only update if we're hovering a different row
+    if (_currentHoveredRow != rowKey) {
+      print('Row hovered: $strike $side price: $price position: $position');
+      setState(() {
+        _hoveredStrike = strike;
+        _hoveredSide = side;
+        _hoveredPrice = price;
+        _hoverPosition = position;
+        _currentHoveredRow = rowKey;
+      });
+    }
+  }
+
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    final isPositive = optionChain.underlyingPrice >= 0;
+    final isPositive = widget.optionChain.underlyingPrice >= 0;
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -55,16 +167,16 @@ class OptionChainWidget extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  '${optionChain.underlying} Option Chain',
+                  '${widget.optionChain.underlying} Option Chain',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              if (onRefresh != null)
+              if (widget.onRefresh != null)
                 IconButton(
-                  onPressed: onRefresh,
+                  onPressed: widget.onRefresh,
                   icon: const Icon(Icons.refresh),
                   tooltip: 'Refresh',
                 ),
@@ -83,7 +195,7 @@ class OptionChainWidget extends StatelessWidget {
                     style: theme.textTheme.bodyMedium,
                   ),
                   Text(
-                    '₹${optionChain.underlyingPrice.toStringAsFixed(2)}',
+                    '₹${widget.optionChain.underlyingPrice.toStringAsFixed(2)}',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isPositive ? AppColors.success : AppColors.error,
@@ -99,7 +211,7 @@ class OptionChainWidget extends StatelessWidget {
                     style: theme.textTheme.bodyMedium,
                   ),
                   Text(
-                    '${optionChain.expiry.day}/${optionChain.expiry.month}/${optionChain.expiry.year}',
+                    '${widget.optionChain.expiry.day}/${widget.optionChain.expiry.month}/${widget.optionChain.expiry.year}',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -182,7 +294,7 @@ class OptionChainWidget extends StatelessWidget {
 
   Widget _buildTableRows(BuildContext context) {
     return Column(
-      children: optionChain.strikes.map((strike) => _buildTableRow(context, strike)).toList(),
+      children: widget.optionChain.strikes.map((strike) => _buildTableRow(context, strike)).toList(),
     );
   }
 
@@ -198,32 +310,54 @@ class OptionChainWidget extends StatelessWidget {
       rowColor = theme.colorScheme.secondary.withOpacity(0.05);
     }
 
-    return Container(
-      color: rowColor,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          // Call side
-          _buildDataCell(call?.openInterest?.toString() ?? '-', 60),
-          _buildDataCell(call?.volume.toString() ?? '-', 70),
-          _buildDataCell(call?.iv.toStringAsFixed(1) ?? '-', 50),
-          _buildPriceDataCell(call?.ltp, 60),
-          _buildChangeDataCell(call?.change, call?.changePercent, 80),
-          _buildDataCell(call?.bid.toStringAsFixed(2) ?? '-', 60),
-          _buildDataCell(call?.ask.toStringAsFixed(2) ?? '-', 60),
+    return MouseRegion(
+      onHover: (event) {
+        // Calculate position for floating widget
+        final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+        if (renderBox != null) {
+          final position = renderBox.globalToLocal(event.position);
           
-          // Strike price (center)
-          _buildStrikeCell(strike, 80, context),
+          // Determine which side is being hovered based on mouse position
+          final rowWidth = renderBox.size.width;
+          final isCallSide = position.dx < rowWidth * 0.5;
+          final side = isCallSide ? 'CE' : 'PE';
+          final price = isCallSide ? (call?.ltp ?? 0) : (put?.ltp ?? 0);
           
-          // Put side
-          _buildDataCell(put?.bid.toStringAsFixed(2) ?? '-', 60),
-          _buildDataCell(put?.ask.toStringAsFixed(2) ?? '-', 60),
-          _buildChangeDataCell(put?.change, put?.changePercent, 80),
-          _buildPriceDataCell(put?.ltp, 60),
-          _buildDataCell(put?.iv.toStringAsFixed(1) ?? '-', 50),
-          _buildDataCell(put?.volume.toString() ?? '-', 70),
-          _buildDataCell(put?.openInterest?.toString() ?? '-', 60),
-        ],
+          _onRowHover(
+            strike.strikePrice.toStringAsFixed(0),
+            side,
+            price,
+            Offset(position.dx + 20, position.dy - 20),
+          );
+        }
+      },
+      child: Container(
+        color: rowColor,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            // Call side
+            _buildDataCell(call?.openInterest?.toString() ?? '-', 60),
+            _buildDataCell(call?.volume.toString() ?? '-', 70),
+            _buildDataCell(call?.iv.toStringAsFixed(1) ?? '-', 50),
+            _buildInteractiveDataCell(call?.ltp ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'CE', bid: call?.bid, ask: call?.ask),
+            _buildChangeDataCell(call?.change, call?.changePercent, 80),
+            _buildInteractiveDataCell(call?.bid ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'CE', bid: call?.bid, ask: call?.ask),
+            _buildInteractiveDataCell(call?.ask ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'CE', bid: call?.bid, ask: call?.ask),
+            
+            // Strike price (center)
+            _buildStrikeCell(strike, 80, context),
+            
+            // Put side
+            _buildInteractiveDataCell(put?.bid ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'PE', bid: put?.bid, ask: put?.ask),
+            _buildInteractiveDataCell(put?.ask ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'PE', bid: put?.bid, ask: put?.ask),
+            _buildChangeDataCell(put?.change, put?.changePercent, 80),
+            _buildInteractiveDataCell(put?.ltp ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'PE', bid: put?.bid, ask: put?.ask),
+            _buildDataCell(put?.iv.toStringAsFixed(1) ?? '-', 50),
+            _buildDataCell(put?.volume.toString() ?? '-', 70),
+            _buildDataCell(put?.openInterest?.toString() ?? '-', 60),
+          ],
+        ),
       ),
     );
   }
@@ -237,6 +371,10 @@ class OptionChainWidget extends StatelessWidget {
         textAlign: TextAlign.right,
       ),
     );
+  }
+
+  Widget _buildInteractiveDataCell(double value, double width, String strike, String optionType, {double? bid, double? ask}) {
+    return _buildPriceDataCell(value, width);
   }
 
   Widget _buildPriceDataCell(double? price, double width) {
