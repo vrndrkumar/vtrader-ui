@@ -58,30 +58,20 @@ class _ChartWidgetState extends State<ChartWidget> {
         
         return Container(
           padding: EdgeInsets.all(isNarrow ? 8 : 16),
-          child: Column(
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '${widget.symbol} Chart',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: isNarrow ? 16 : null,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+              // Title
+              Expanded(
+                child: Text(
+                  '${widget.symbol} Chart',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: isNarrow ? 16 : null,
                   ),
-                  if (widget.onRefresh != null)
-                    IconButton(
-                      onPressed: widget.onRefresh,
-                      icon: const Icon(Icons.refresh),
-                      tooltip: 'Refresh',
-                      iconSize: isNarrow ? 20 : 24,
-                    ),
-                ],
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              if (!isNarrow) const SizedBox(height: 8),
+              
               // Timeframe selector
               Container(
                 decoration: BoxDecoration(
@@ -96,6 +86,17 @@ class _ChartWidgetState extends State<ChartWidget> {
                     )
                   : _buildTimeframeButtons(theme, isNarrow),
               ),
+              
+              const SizedBox(width: 16),
+              
+              // Refresh button
+              if (widget.onRefresh != null)
+                IconButton(
+                  onPressed: widget.onRefresh,
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh',
+                  iconSize: isNarrow ? 20 : 24,
+                ),
             ],
           ),
         );
