@@ -21,18 +21,19 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       email: fields[1] as String,
       firstName: fields[2] as String,
       lastName: fields[3] as String,
-      profilePicture: fields[4] as String?,
-      createdAt: fields[5] as DateTime,
-      updatedAt: fields[6] as DateTime,
-      preferences: fields[7] as UserPreferences,
-      subscription: fields[8] as UserSubscription,
+      contactNumber: fields[4] as String?,
+      profilePicture: fields[5] as String?,
+      createdAt: fields[6] as DateTime,
+      updatedAt: fields[7] as DateTime,
+      preferences: fields[8] as UserPreferences,
+      subscription: fields[9] as UserSubscription,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -42,14 +43,16 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       ..writeByte(3)
       ..write(obj.lastName)
       ..writeByte(4)
-      ..write(obj.profilePicture)
+      ..write(obj.contactNumber)
       ..writeByte(5)
-      ..write(obj.createdAt)
+      ..write(obj.profilePicture)
       ..writeByte(6)
-      ..write(obj.updatedAt)
+      ..write(obj.createdAt)
       ..writeByte(7)
-      ..write(obj.preferences)
+      ..write(obj.updatedAt)
       ..writeByte(8)
+      ..write(obj.preferences)
+      ..writeByte(9)
       ..write(obj.subscription);
   }
 
@@ -168,6 +171,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
       email: json['email'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
+      contactNumber: json['contactNumber'] as String?,
       profilePicture: json['profilePicture'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -182,6 +186,7 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
       'email': instance.email,
       'firstName': instance.firstName,
       'lastName': instance.lastName,
+      'contactNumber': instance.contactNumber,
       'profilePicture': instance.profilePicture,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),

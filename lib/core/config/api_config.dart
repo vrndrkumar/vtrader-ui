@@ -6,6 +6,7 @@ class ApiConfig {
   static const String positionsEndpoint = '/trade/positions';
   static const String ordersEndpoint = '/trade/orders';
   static const String marketDataEndpoint = '/market/data';
+  static const String indicesEndpoint = '/trade/indices';
   
   // Default User Configuration (Hardcoded for now)
   static const String defaultUserId = '31';
@@ -35,5 +36,9 @@ class ApiConfig {
   
   static String getMarketDataUrl(String symbol) {
     return '$baseUrl$marketDataEndpoint?symbol=$symbol';
+  }
+  
+  static String getIndicesUrl() {
+    return '$baseUrl$indicesEndpoint';
   }
 }

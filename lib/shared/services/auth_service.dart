@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 
 import '../models/user_model.dart';
 import 'storage_service.dart';
+import 'master_data_service.dart';
 import '../../core/constants/app_constants.dart';
 
 /// Authentication service abstraction
@@ -45,6 +46,7 @@ abstract class AuthService {
     required String password,
     required String firstName,
     required String lastName,
+    String? contactNumber,
   });
 
   /// Sign in with email and password
@@ -175,6 +177,7 @@ class MockAuthService extends AuthService {
     required String password,
     required String firstName,
     required String lastName,
+    String? contactNumber,
   }) async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
@@ -201,6 +204,7 @@ class MockAuthService extends AuthService {
       password: _hashPassword(password),
       firstName: firstName,
       lastName: lastName,
+      contactNumber: contactNumber,
     );
 
     _mockUsers.add(mockUser);
@@ -211,6 +215,7 @@ class MockAuthService extends AuthService {
       email: email,
       firstName: firstName,
       lastName: lastName,
+      contactNumber: contactNumber,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
       preferences: const UserPreferences(),
@@ -219,6 +224,14 @@ class MockAuthService extends AuthService {
 
     // Save session
     await _saveSession(user);
+
+    // Fetch master data after successful signup
+    try {
+      await MasterDataService.instance.fetchIndices();
+    } catch (e) {
+      print('Failed to fetch master data after signup: $e');
+      // Don't fail signup if master data fetch fails
+    }
 
     return AuthResult.success(user: user, token: _generateToken());
   }
@@ -259,10 +272,18 @@ class MockAuthService extends AuthService {
         subscription: const UserSubscription(),
       );
 
-      // Save session
-      await _saveSession(user);
+    // Save session
+    await _saveSession(user);
 
-      return AuthResult.success(user: user, token: _generateToken());
+    // Fetch master data after successful signin
+    try {
+      await MasterDataService.instance.fetchIndices();
+    } catch (e) {
+      print('Failed to fetch master data after signin: $e');
+      // Don't fail signin if master data fetch fails
+    }
+
+    return AuthResult.success(user: user, token: _generateToken());
     } catch (e) {
       print('Auth error: $e'); // Debug print
       return AuthResult.failure('Authentication failed: ${e.toString()}');
@@ -440,12 +461,14 @@ class MockUser {
   final String password; // Hashed
   final String firstName;
   final String lastName;
+  final String? contactNumber;
 
   const MockUser({
     required this.email,
     required this.password,
     required this.firstName,
     required this.lastName,
+    this.contactNumber,
   });
 }
 

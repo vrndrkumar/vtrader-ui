@@ -23,12 +23,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _contactNumberController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   
   final _firstNameFocusNode = FocusNode();
   final _lastNameFocusNode = FocusNode();
   final _emailFocusNode = FocusNode();
+  final _contactNumberFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _confirmPasswordFocusNode = FocusNode();
 
@@ -41,12 +43,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+    _contactNumberController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     
     _firstNameFocusNode.dispose();
     _lastNameFocusNode.dispose();
     _emailFocusNode.dispose();
+    _contactNumberFocusNode.dispose();
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
     super.dispose();
@@ -237,8 +241,23 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             focusNode: _emailFocusNode,
             validator: _validateEmail,
             onFieldSubmitted: (_) {
+              FocusScope.of(context).requestFocus(_contactNumberFocusNode);
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Contact Number
+          AppInput(
+            label: 'Contact Number',
+            hint: '+1 (555) 123-4567',
+            controller: _contactNumberController,
+            focusNode: _contactNumberFocusNode,
+            validator: _validateContactNumber,
+            keyboardType: TextInputType.phone,
+            onFieldSubmitted: (_) {
               FocusScope.of(context).requestFocus(_passwordFocusNode);
             },
+            isRequired: false,
           ),
           const SizedBox(height: 16),
 
@@ -369,8 +388,24 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       return 'Please confirm your password';
     }
     if (value != _passwordController.text) {
-      return 'Passwords do not match';
+return 'Passwords do not match';
     }
+    return null;
+  }
+
+  String? _validateContactNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null; // Contact number is optional
+    }
+    
+    // Remove all non-digit characters for validation
+    final digitsOnly = value.replaceAll(RegExp(r'[^\d]'), '');
+    
+    // Check if it's a valid phone number (7-15 digits)
+    if (digitsOnly.length < 7 || digitsOnly.length > 15) {
+      return 'Please enter a valid contact number';
+    }
+    
     return null;
   }
 
@@ -397,6 +432,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         password: _passwordController.text,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim(),
+        contactNumber: _contactNumberController.text.trim().isNotEmpty 
+            ? _contactNumberController.text.trim() 
+            : null,
       );
 
       if (mounted) {

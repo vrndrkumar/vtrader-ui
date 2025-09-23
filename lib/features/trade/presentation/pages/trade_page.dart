@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:resizable_widget/resizable_widget.dart';
 import '../widgets/option_chain_widget.dart';
 import '../widgets/chart_widget.dart';
@@ -8,8 +9,10 @@ import '../../data/services/mock_market_data_service.dart';
 import '../../domain/models/option_chain_model.dart';
 import '../../domain/models/position_model.dart';
 import '../../../../shared/services/storage_service.dart';
+import '../../../../shared/providers/master_data_provider.dart';
+import '../../../../shared/models/index_model.dart';
 
-class TradePage extends StatefulWidget {
+class TradePage extends ConsumerStatefulWidget {
   final String? symbol;
 
   const TradePage({
@@ -18,13 +21,14 @@ class TradePage extends StatefulWidget {
   });
 
   @override
-  State<TradePage> createState() => _TradePageState();
+  ConsumerState<TradePage> createState() => _TradePageState();
 }
 
-class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
+class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateMixin {
   final MockMarketDataService _marketDataService = MockMarketDataService();
   
   String _selectedIndex = 'NIFTY';
+  String? _selectedExpiry;
   OptionChainModel? _optionChain;
   List<CandleData> _candleData = [];
   List<PositionModel> _positions = [];
@@ -47,6 +51,11 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
     _loadPanelSizes();
     _loadInitialData();
     _startAutoRefresh();
+    
+    // Listen to master data changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeFromMasterData();
+    });
   }
 
   @override
@@ -145,6 +154,7 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
       print('Index changing from $_selectedIndex to $newIndex');
       setState(() {
         _selectedIndex = newIndex;
+        _selectedExpiry = null; // Reset expiry when index changes
         _isLoading = true;
         // Clear existing data to force complete rebuild
         _optionChain = null;
@@ -153,6 +163,35 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
         _orders = [];
       });
       _loadInitialData();
+    }
+  }
+
+  void _onIndexModelChanged(IndexModel? indexModel) {
+    if (indexModel != null) {
+      _onIndexChanged(indexModel.symbolCode);
+    }
+  }
+
+  void _onExpiryChanged(String? expiry) {
+    setState(() {
+      _selectedExpiry = expiry;
+    });
+    // Optionally reload data with new expiry
+    if (expiry != null) {
+      _loadInitialData();
+    }
+  }
+
+  void _initializeFromMasterData() {
+    final masterDataState = ref.read(masterDataStateProvider);
+    if (masterDataState.hasData) {
+      // Set default index if not already set
+      final selectedIndex = ref.read(selectedIndexProvider);
+      if (selectedIndex == null) {
+        final defaultIndex = masterDataState.indices.first;
+        ref.read(selectedIndexProvider.notifier).state = defaultIndex;
+        _onIndexChanged(defaultIndex.symbolCode);
+      }
     }
   }
 
@@ -175,7 +214,8 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
 
   Widget _buildTopControls(BuildContext context) {
     final theme = Theme.of(context);
-    final indices = _marketDataService.getIndices();
+    final masterDataState = ref.watch(masterDataStateProvider);
+    final selectedIndex = ref.watch(selectedIndexProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -206,40 +246,64 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: _selectedIndex,
-                onChanged: (value) {
+                value: selectedIndex?.symbolCode ?? _selectedIndex,
+                onChanged: masterDataState.isLoading ? null : (value) {
                   if (value != null) {
+                    // Find the index model and update state
+                    final indexModel = masterDataState.indices.firstWhere(
+                      (index) => index.symbolCode == value,
+                      orElse: () => masterDataState.indices.first,
+                    );
+                    ref.read(selectedIndexProvider.notifier).state = indexModel;
                     _onIndexChanged(value);
                   }
                 },
-                items: indices.map((index) {
-                  final isPositive = index.change >= 0;
+                hint: masterDataState.isLoading
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Loading...',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : null,
+                items: masterDataState.indices.map((index) {
                   return DropdownMenuItem<String>(
-                    value: index.symbol,
+                    value: index.symbolCode,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            index.name,
+                            index.symbolName,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '₹${index.ltp.toStringAsFixed(2)}',
+                            '${index.exchange}',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '(${isPositive ? '+' : ''}${index.changePercent.toStringAsFixed(2)}%)',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isPositive ? Colors.green : Colors.red,
-                              fontFamily: 'monospace',
+                              color: theme.colorScheme.onSurface.withOpacity(0.6),
                             ),
                           ),
                         ],
@@ -256,6 +320,12 @@ class _TradePageState extends State<TradePage> with TickerProviderStateMixin {
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
+          ),
+          const SizedBox(width: 16),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshData,
+            tooltip: 'Refresh Data',
           ),
         ],
       ),

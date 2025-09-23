@@ -21,18 +21,21 @@ class UserModel extends Equatable {
   final String lastName;
   
   @HiveField(4)
-  final String? profilePicture;
+  final String? contactNumber;
   
   @HiveField(5)
-  final DateTime createdAt;
+  final String? profilePicture;
   
   @HiveField(6)
-  final DateTime updatedAt;
+  final DateTime createdAt;
   
   @HiveField(7)
-  final UserPreferences preferences;
+  final DateTime updatedAt;
   
   @HiveField(8)
+  final UserPreferences preferences;
+  
+  @HiveField(9)
   final UserSubscription subscription;
 
   const UserModel({
@@ -40,6 +43,7 @@ class UserModel extends Equatable {
     required this.email,
     required this.firstName,
     required this.lastName,
+    this.contactNumber,
     this.profilePicture,
     required this.createdAt,
     required this.updatedAt,
@@ -72,6 +76,7 @@ class UserModel extends Equatable {
     String? email,
     String? firstName,
     String? lastName,
+    String? contactNumber,
     String? profilePicture,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -83,6 +88,7 @@ class UserModel extends Equatable {
       email: email ?? this.email,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
+      contactNumber: contactNumber ?? this.contactNumber,
       profilePicture: profilePicture ?? this.profilePicture,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -97,6 +103,7 @@ class UserModel extends Equatable {
         email,
         firstName,
         lastName,
+        contactNumber,
         profilePicture,
         createdAt,
         updatedAt,

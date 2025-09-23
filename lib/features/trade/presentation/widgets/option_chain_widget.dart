@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/option_chain_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/providers/master_data_provider.dart';
 import 'floating_trade_widget.dart';
 
-class OptionChainWidget extends StatefulWidget {
+class OptionChainWidget extends ConsumerStatefulWidget {
   final OptionChainModel optionChain;
   final VoidCallback? onRefresh;
 
@@ -14,10 +16,10 @@ class OptionChainWidget extends StatefulWidget {
   });
 
   @override
-  State<OptionChainWidget> createState() => _OptionChainWidgetState();
+  ConsumerState<OptionChainWidget> createState() => _OptionChainWidgetState();
 }
 
-class _OptionChainWidgetState extends State<OptionChainWidget> {
+class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   String? _hoveredStrike;
   String? _hoveredSide;
   double? _hoveredPrice;
@@ -153,6 +155,79 @@ class _OptionChainWidgetState extends State<OptionChainWidget> {
     }
   }
 
+  Widget _buildExpiryDropdown(BuildContext context, ThemeData theme) {
+    final selectedIndex = ref.watch(selectedIndexProvider);
+    final availableExpiries = ref.watch(availableExpiriesProvider);
+    final selectedExpiry = ref.watch(selectedExpiryProvider);
+    
+    // Get current expiry as default
+    final currentExpiry = '${widget.optionChain.expiry.day}/${widget.optionChain.expiry.month}/${widget.optionChain.expiry.year}';
+    
+    // Create list of all available expiries
+    List<String> allExpiries = [currentExpiry];
+    if (availableExpiries.isNotEmpty) {
+      final formattedExpiries = availableExpiries.map((expiry) => _formatExpiryForDropdown(expiry)).toList();
+      allExpiries.addAll(formattedExpiries);
+      // Remove duplicates
+      allExpiries = allExpiries.toSet().toList();
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.dividerColor),
+        borderRadius: BorderRadius.circular(6),
+        color: theme.cardColor,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedExpiry ?? currentExpiry,
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              ref.read(selectedExpiryProvider.notifier).state = newValue;
+            }
+          },
+          items: allExpiries.map((expiry) {
+            final isCurrentExpiry = expiry == currentExpiry;
+            return DropdownMenuItem<String>(
+              value: expiry,
+              child: Text(
+                expiry,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: isCurrentExpiry ? FontWeight.bold : FontWeight.w500,
+                  color: isCurrentExpiry ? theme.colorScheme.primary : null,
+                ),
+              ),
+            );
+          }).toList(),
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            size: 16,
+            color: theme.colorScheme.onSurface.withOpacity(0.6),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _formatExpiryForDropdown(String expiry) {
+    try {
+      final day = expiry.substring(0, 2);
+      final monthStr = expiry.substring(2, 5);
+      final year = '20${expiry.substring(5, 7)}';
+      
+      final monthMap = {
+        'JAN': '1', 'FEB': '2', 'MAR': '3', 'APR': '4', 'MAY': '5', 'JUN': '6',
+        'JUL': '7', 'AUG': '8', 'SEP': '9', 'OCT': '10', 'NOV': '11', 'DEC': '12',
+      };
+      
+      final month = monthMap[monthStr] ?? '1';
+      return '$day/$month/$year';
+    } catch (e) {
+      return expiry;
+    }
+  }
+
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
     final isPositive = widget.optionChain.underlyingPrice >= 0;
@@ -210,12 +285,8 @@ class _OptionChainWidgetState extends State<OptionChainWidget> {
                     'Expiry: ',
                     style: theme.textTheme.bodyMedium,
                   ),
-                  Text(
-                    '${widget.optionChain.expiry.day}/${widget.optionChain.expiry.month}/${widget.optionChain.expiry.year}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  const SizedBox(width: 8),
+                  _buildExpiryDropdown(context, theme),
                 ],
               ),
             ],
