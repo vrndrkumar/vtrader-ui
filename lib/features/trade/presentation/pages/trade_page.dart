@@ -449,4 +449,5 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
       ),
     );
   }
+
 }

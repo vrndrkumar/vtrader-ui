@@ -154,64 +154,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   Widget _buildTabletLayout(BuildContext context, List<NavigationItem> items) {
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (index) => _onItemTapped(index, items),
-            labelType: NavigationRailLabelType.selected,
-            leading: Column(
-              children: [
-                const SizedBox(height: 8),
-                FloatingActionButton.small(
-                  onPressed: () => context.go('/trades/add'),
-                  child: const Icon(Icons.add),
-                ),
-                const SizedBox(height: 16),
-                const ThemeToggleButton(),
-              ],
-            ),
-            trailing: Expanded(
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: PopupMenuButton<String>(
-                    onSelected: _handleMenuAction,
-                    child: const CircleAvatar(
-                      child: Icon(Icons.person),
-                    ),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'profile',
-                        child: ListTile(
-                          leading: Icon(Icons.person_outline),
-                          title: Text('Profile'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'signOut',
-                        child: ListTile(
-                          leading: Icon(Icons.logout),
-                          title: Text('Sign Out'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            destinations: items.map((item) {
-              return NavigationRailDestination(
-                icon: Icon(item.icon),
-                selectedIcon: Icon(item.selectedIcon),
-                label: Text(item.label),
-              );
-            }).toList(),
-          ),
-          const VerticalDivider(thickness: 1, width: 1),
+          _buildTopBar(context, items),
           Expanded(child: widget.child),
         ],
       ),
@@ -220,167 +165,191 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   Widget _buildDesktopLayout(BuildContext context, List<NavigationItem> items) {
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          Container(
-            width: 280,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                right: BorderSide(
-                  color: Theme.of(context).colorScheme.outline,
-                  width: 1,
-                ),
-              ),
-            ),
-            child: Column(
+          _buildTopBar(context, items),
+          Expanded(child: widget.child),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context, List<NavigationItem> items) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      height: 64,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outline.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          children: [
+            // Company Logo and Name
+            Row(
               children: [
-                // Header
                 Container(
-                  padding: const EdgeInsets.all(24),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.primaryGradient,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.trending_up,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        AppConstants.appName,
-                        style: AppTypography.titleLarge.copyWith(
-                          fontWeight: AppTypography.bold,
-                        ),
-                      ),
-                    ],
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.trending_up,
+                    color: Colors.white,
+                    size: 20,
                   ),
                 ),
-
-                // Navigation items
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      final isSelected = _selectedIndex == index;
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: ListTile(
-                          leading: Icon(
-                            isSelected ? item.selectedIcon : item.icon,
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          title: Text(
-                            item.label,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: isSelected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontWeight: isSelected
-                                  ? AppTypography.medium
-                                  : AppTypography.regular,
-                            ),
-                          ),
-                          selected: isSelected,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          onTap: () => _onItemTapped(index, items),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // Footer
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      const Divider(),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const ThemeToggleButton(),
-                          const Spacer(),
-                          PopupMenuButton<String>(
-                            onSelected: _handleMenuAction,
-                            child: Row(
-                              children: [
-                                const CircleAvatar(
-                                  radius: 16,
-                                  child: Icon(Icons.person, size: 20),
-                                ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      AuthService.instance.currentUser?.displayName ?? 'User',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        fontWeight: AppTypography.medium,
-                                      ),
-                                    ),
-                                    Text(
-                                      'View profile',
-                                      style: AppTypography.caption.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            itemBuilder: (context) => [
-                              const PopupMenuItem(
-                                value: 'profile',
-                                child: ListTile(
-                                  leading: Icon(Icons.person_outline),
-                                  title: Text('Profile'),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                              ),
-                              const PopupMenuItem(
-                                value: 'preferences',
-                                child: ListTile(
-                                  leading: Icon(Icons.tune),
-                                  title: Text('Preferences'),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                              ),
-                              const PopupMenuDivider(),
-                              const PopupMenuItem(
-                                value: 'signOut',
-                                child: ListTile(
-                                  leading: Icon(Icons.logout),
-                                  title: Text('Sign Out'),
-                                  contentPadding: EdgeInsets.zero,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
+                const SizedBox(width: 12),
+                Text(
+                  AppConstants.appName,
+                  style: AppTypography.titleLarge.copyWith(
+                    fontWeight: AppTypography.bold,
                   ),
                 ),
               ],
             ),
-          ),
-          Expanded(child: widget.child),
-        ],
+            
+            const Spacer(),
+            
+            // Theme Toggle
+            const ThemeToggleButton(),
+            
+            const SizedBox(width: 16),
+            
+            // User Profile with Navigation
+            PopupMenuButton<String>(
+              onSelected: _handleMenuAction,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircleAvatar(
+                    radius: 16,
+                    child: Icon(Icons.person, size: 20),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AuthService.instance.currentUser?.displayName ?? 'Demo User',
+                        style: AppTypography.bodySmall.copyWith(
+                          fontWeight: AppTypography.medium,
+                        ),
+                      ),
+                      Text(
+                        'View profile',
+                        style: AppTypography.caption.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+              itemBuilder: (context) => [
+                // Navigation Items
+                const PopupMenuItem(
+                  value: 'dashboard',
+                  child: ListTile(
+                    leading: Icon(Icons.dashboard_outlined),
+                    title: Text('Dashboard'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'trade',
+                  child: ListTile(
+                    leading: Icon(Icons.trending_up_outlined),
+                    title: Text('Trade'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'journal',
+                  child: ListTile(
+                    leading: Icon(Icons.book_outlined),
+                    title: Text('Journal'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'brokers',
+                  child: ListTile(
+                    leading: Icon(Icons.account_balance_outlined),
+                    title: Text('Brokers'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'analytics',
+                  child: ListTile(
+                    leading: Icon(Icons.analytics_outlined),
+                    title: Text('Analytics'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                    leading: Icon(Icons.settings_outlined),
+                    title: Text('Settings'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuDivider(),
+                // User Actions
+                const PopupMenuItem(
+                  value: 'profile',
+                  child: ListTile(
+                    leading: Icon(Icons.person_outline),
+                    title: Text('Profile'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'preferences',
+                  child: ListTile(
+                    leading: Icon(Icons.tune),
+                    title: Text('Preferences'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem(
+                  value: 'signOut',
+                  child: ListTile(
+                    leading: Icon(Icons.logout),
+                    title: Text('Sign Out'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -403,6 +372,24 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
 
   void _handleMenuAction(String action) {
     switch (action) {
+      case 'dashboard':
+        context.go('/dashboard');
+        break;
+      case 'trade':
+        context.go('/trade');
+        break;
+      case 'journal':
+        context.go('/trades');
+        break;
+      case 'brokers':
+        context.go('/brokers');
+        break;
+      case 'analytics':
+        context.go('/analytics');
+        break;
+      case 'settings':
+        context.go('/settings');
+        break;
       case 'profile':
         context.go('/settings/profile');
         break;
