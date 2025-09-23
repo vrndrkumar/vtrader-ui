@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/option_chain_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/providers/master_data_provider.dart';
+import '../../../../shared/models/index_model.dart';
 import 'floating_trade_widget.dart';
 
 class OptionChainWidget extends ConsumerStatefulWidget {
@@ -173,11 +174,13 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     }
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      width: 170, // Increased width for better visibility
+      height: 32, // Fixed height to match price box
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Match price element height
       decoration: BoxDecoration(
         border: Border.all(color: theme.dividerColor),
-        borderRadius: BorderRadius.circular(6),
-        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(6), // Match price element border radius
+        color: theme.colorScheme.surface,
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -202,7 +205,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
           }).toList(),
           icon: Icon(
             Icons.keyboard_arrow_down,
-            size: 16,
+            size: 18,
             color: theme.colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
@@ -231,69 +234,126 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
     final isPositive = widget.optionChain.underlyingPrice >= 0;
-    
+    final masterDataState = ref.watch(masterDataStateProvider);
+    final selectedIndex = ref.watch(selectedIndexProvider);
+
     return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        border: Border(
+          bottom: BorderSide(
+            color: theme.dividerColor.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title Row with Price and Controls
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                child: Text(
-                  '${widget.optionChain.underlying} Option Chain',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              // Title
+              Text(
+                '${widget.optionChain.underlying} Option Chain',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(width: 24),
+              
+              // Price next to title
+              _buildPriceOnly(theme, isPositive),
+              const SizedBox(width: 32),
+              
+              // Expiry Dropdown
+              _buildExpiryDropdown(context, theme),
+              
+              const Spacer(),
+              
+              // Refresh Button
               if (widget.onRefresh != null)
-                IconButton(
-                  onPressed: widget.onRefresh,
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh',
-                ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Underlying: ',
-                    style: theme.textTheme.bodyMedium,
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  Text(
-                    '₹${widget.optionChain.underlyingPrice.toStringAsFixed(2)}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isPositive ? AppColors.success : AppColors.error,
+                  child: IconButton(
+                    onPressed: widget.onRefresh,
+                    icon: Icon(
+                      Icons.refresh,
+                      color: theme.colorScheme.primary,
+                    ),
+                    tooltip: 'Refresh Data',
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
                     ),
                   ),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Expiry: ',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildExpiryDropdown(context, theme),
-                ],
-              ),
+                ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildPriceOnly(ThemeData theme, bool isPositive) {
+    return Container(
+      height: 32, // Fixed height to match expiry dropdown
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isPositive 
+            ? AppColors.success.withOpacity(0.1)
+            : AppColors.error.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isPositive 
+              ? AppColors.success.withOpacity(0.3)
+              : AppColors.error.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isPositive ? Icons.trending_up : Icons.trending_down,
+            size: 14,
+            color: isPositive ? AppColors.success : AppColors.error,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '₹${widget.optionChain.underlyingPrice.toStringAsFixed(2)}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isPositive ? AppColors.success : AppColors.error,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+  Color _getIndexColor(String symbolCode) {
+    switch (symbolCode) {
+      case 'NIFTY':
+        return Colors.blue;
+      case 'BANKNIFTY':
+        return Colors.green;
+      case 'FINNIFTY':
+        return Colors.orange;
+      case 'BANKEX':
+        return Colors.purple;
+      case 'SENSEX':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _buildOptionChainTable(BuildContext context) {
