@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import 'storage_service.dart';
 import 'master_data_service.dart';
 import '../../core/constants/app_constants.dart';
+import 'real_auth_service.dart';
 
 /// Authentication service abstraction
 /// This provides a clean interface for authentication operations
@@ -14,7 +15,7 @@ abstract class AuthService {
   
   /// Get the current auth service instance
   static AuthService get instance {
-    _instance ??= MockAuthService();
+    _instance ??= RealAuthService();
     return _instance!;
   }
 
@@ -187,11 +188,12 @@ class MockAuthService extends AuthService {
       return AuthResult.failure('Invalid email format');
     }
 
-    if (password.length < AppConstants.minPasswordLength) {
-      return AuthResult.failure(
-        'Password must be at least ${AppConstants.minPasswordLength} characters',
-      );
-    }
+    // Temporarily removed password length validation
+    // if (password.length < AppConstants.minPasswordLength) {
+    //   return AuthResult.failure(
+    //     'Password must be at least ${AppConstants.minPasswordLength} characters',
+    //   );
+    // }
 
     // Check if user already exists
     if (_mockUsers.any((user) => user.email == email)) {
@@ -326,11 +328,12 @@ class MockAuthService extends AuthService {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
 
-    if (newPassword.length < AppConstants.minPasswordLength) {
-      return AuthResult.failure(
-        'Password must be at least ${AppConstants.minPasswordLength} characters',
-      );
-    }
+    // Temporarily removed password length validation
+    // if (newPassword.length < AppConstants.minPasswordLength) {
+    //   return AuthResult.failure(
+    //     'Password must be at least ${AppConstants.minPasswordLength} characters',
+    //   );
+    // }
 
     // In a real implementation, this would validate the token
     // and update the password in the backend
@@ -375,11 +378,12 @@ class MockAuthService extends AuthService {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
 
-    if (newPassword.length < AppConstants.minPasswordLength) {
-      return AuthResult.failure(
-        'Password must be at least ${AppConstants.minPasswordLength} characters',
-      );
-    }
+    // Temporarily removed password length validation
+    // if (newPassword.length < AppConstants.minPasswordLength) {
+    //   return AuthResult.failure(
+    //     'Password must be at least ${AppConstants.minPasswordLength} characters',
+    //   );
+    // }
 
     // In a real implementation, this would verify the current password
     // and update it in the backend

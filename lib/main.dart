@@ -12,14 +12,20 @@ import 'core/router/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Hive for local storage
-  await Hive.initFlutter();
-  
-  // Initialize storage service
-  await StorageService.init();
-  
-  // Initialize auth service
-  await AuthService.init();
+  // Temporarily disable problematic initialization
+  try {
+    // Initialize Hive for local storage
+    await Hive.initFlutter();
+    
+    // Initialize storage service
+    await StorageService.init();
+    
+    // Initialize auth service
+    await AuthService.init();
+  } catch (e) {
+    print('Initialization error: $e');
+    // Continue with app startup even if initialization fails
+  }
   
   runApp(
     const ProviderScope(

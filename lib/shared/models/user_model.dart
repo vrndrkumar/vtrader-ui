@@ -37,6 +37,9 @@ class UserModel extends Equatable {
   
   @HiveField(9)
   final UserSubscription subscription;
+  
+  @HiveField(10)
+  final String? roles;
 
   const UserModel({
     required this.id,
@@ -49,6 +52,7 @@ class UserModel extends Equatable {
     required this.updatedAt,
     required this.preferences,
     required this.subscription,
+    this.roles,
   });
 
   /// Full name getter
@@ -82,6 +86,7 @@ class UserModel extends Equatable {
     DateTime? updatedAt,
     UserPreferences? preferences,
     UserSubscription? subscription,
+    String? roles,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -94,6 +99,7 @@ class UserModel extends Equatable {
       updatedAt: updatedAt ?? this.updatedAt,
       preferences: preferences ?? this.preferences,
       subscription: subscription ?? this.subscription,
+      roles: roles ?? this.roles,
     );
   }
 
@@ -109,6 +115,7 @@ class UserModel extends Equatable {
         updatedAt,
         preferences,
         subscription,
+        roles,
       ];
 }
 

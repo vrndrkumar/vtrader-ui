@@ -3,19 +3,48 @@ import 'package:http/http.dart' as http;
 import '../../domain/models/position_model.dart';
 import '../../../../core/config/api_config.dart';
 import '../../../../core/services/user_config_service.dart';
+import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/services/storage_service.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class PositionService {
   static final UserConfigService _userConfig = UserConfigService();
 
   /// Fetch positions from the live API
-  static Future<List<PositionModel>> fetchPositions() async {
+  static Future<List<PositionModel>> fetchPositions({String? brokerName}) async {
     try {
+      // Get actual user ID from auth service
+      final currentUser = AuthService.instance.currentUser;
+      final userId = currentUser?.id ?? '31'; // Fallback for testing
+      
+      // Get broker name from parameter or default broker from preferences
+      String selectedBroker = brokerName ?? 'FINVASIA';
+      
+      // Try to get default broker from user preferences
+      if (brokerName == null) {
+        final brokerPrefsData = StorageService.getString(AppConstants.brokerPreferencesKey);
+        if (brokerPrefsData != null) {
+          try {
+            final brokerPrefs = jsonDecode(brokerPrefsData) as List;
+            final defaultBroker = brokerPrefs.firstWhere(
+              (broker) => broker['default'] == true,
+              orElse: () => brokerPrefs.first,
+            );
+            selectedBroker = defaultBroker['brokerName'] ?? 'FINVASIA';
+          } catch (e) {
+            print('Error parsing broker preferences: $e');
+          }
+        }
+      }
+      
       final url = Uri.parse(ApiConfig.getPositionsUrl(
-        userId: _userConfig.userId,
-        brokerName: _userConfig.brokerName,
+        userId: userId,
+        brokerName: selectedBroker,
+        useTestUrl: true, // Use test URL for now
       ));
       
       print('Fetching positions from: $url');
+      print('User ID: $userId, Broker: $selectedBroker');
       
       final response = await http.get(
         url,

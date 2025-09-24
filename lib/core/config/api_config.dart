@@ -1,16 +1,12 @@
+import '../constants/app_constants.dart';
+import '../../shared/services/api_service.dart';
+
 class ApiConfig {
-  // Base API URL
-  static const String baseUrl = 'https://apivtrader.a.pinggy.link';
-  
   // API Endpoints
   static const String positionsEndpoint = '/trade/positions';
   static const String ordersEndpoint = '/trade/orders';
   static const String marketDataEndpoint = '/market/data';
   static const String indicesEndpoint = '/trade/indices';
-  
-  // Default User Configuration (Hardcoded for now)
-  static const String defaultUserId = '31';
-  static const String defaultBrokerName = 'FINVASIA';
   
   // API Headers
   static const Map<String, String> defaultHeaders = {
@@ -22,23 +18,27 @@ class ApiConfig {
   static const Duration requestTimeout = Duration(seconds: 30);
   
   // Helper methods
-  static String getPositionsUrl({String? userId, String? brokerName}) {
-    final uid = userId ?? defaultUserId;
-    final broker = brokerName ?? defaultBrokerName;
+  static String getPositionsUrl({String? userId, String? brokerName, bool useTestUrl = true}) {
+    final baseUrl = useTestUrl ? AppConstants.testBaseUrl : AppConstants.baseUrl;
+    final uid = userId ?? '31'; // Fallback for testing
+    final broker = brokerName ?? 'FINVASIA'; // Fallback for testing
     return '$baseUrl$positionsEndpoint?userId=$uid&brokerName=$broker';
   }
   
-  static String getOrdersUrl({String? userId, String? brokerName}) {
-    final uid = userId ?? defaultUserId;
-    final broker = brokerName ?? defaultBrokerName;
+  static String getOrdersUrl({String? userId, String? brokerName, bool useTestUrl = true}) {
+    final baseUrl = useTestUrl ? AppConstants.testBaseUrl : AppConstants.baseUrl;
+    final uid = userId ?? '31'; // Fallback for testing
+    final broker = brokerName ?? 'FINVASIA'; // Fallback for testing
     return '$baseUrl$ordersEndpoint?userId=$uid&brokerName=$broker';
   }
   
-  static String getMarketDataUrl(String symbol) {
+  static String getMarketDataUrl(String symbol, {bool useTestUrl = true}) {
+    final baseUrl = useTestUrl ? AppConstants.testBaseUrl : AppConstants.baseUrl;
     return '$baseUrl$marketDataEndpoint?symbol=$symbol';
   }
   
-  static String getIndicesUrl() {
+  static String getIndicesUrl({bool useTestUrl = true}) {
+    final baseUrl = useTestUrl ? AppConstants.testBaseUrl : AppConstants.baseUrl;
     return '$baseUrl$indicesEndpoint';
   }
 }

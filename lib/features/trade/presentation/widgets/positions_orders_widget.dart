@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/position_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/user_config_service.dart';
 import '../../data/services/position_service.dart';
+import '../../../../shared/services/broker_selection_service.dart';
+import '../../../../shared/models/api_models.dart';
 import 'position_card.dart';
 import 'order_card.dart';
 
-class PositionsOrdersWidget extends StatefulWidget {
+class PositionsOrdersWidget extends ConsumerStatefulWidget {
   final List<PositionModel> positions;
   final List<OrderModel> orders;
   final VoidCallback? onRefresh;
@@ -19,10 +22,10 @@ class PositionsOrdersWidget extends StatefulWidget {
   });
 
   @override
-  State<PositionsOrdersWidget> createState() => _PositionsOrdersWidgetState();
+  ConsumerState<PositionsOrdersWidget> createState() => _PositionsOrdersWidgetState();
 }
 
-class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
+class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
     with TickerProviderStateMixin {
   late TabController _mainTabController;
   late TabController _positionsTabController;
@@ -62,9 +65,12 @@ class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
 
     try {
       if (_userConfig.useLiveData) {
-        // Load from live API
-        print('Loading live data for user: ${_userConfig.userId}, broker: ${_userConfig.brokerName}');
-        _allPositions = await PositionService.fetchPositions();
+        // Get current broker from broker selection service
+        final currentBroker = ref.read(brokerSelectionProvider);
+        
+        // Load from live API with current broker
+        print('Loading live data for broker: $currentBroker');
+        _allPositions = await PositionService.fetchPositions(brokerName: currentBroker);
       } else {
         // Load mock data
         print('Loading mock data');
@@ -127,6 +133,26 @@ class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
+          // Broker selector row
+          if (_userConfig.useLiveData) ...[
+            Row(
+              children: [
+                const Icon(Icons.account_balance, size: 16),
+                const SizedBox(width: 8),
+                const Text('Broker:'),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildBrokerSelector(context),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh, size: 16),
+                  onPressed: _loadData,
+                  tooltip: 'Refresh data',
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
           Row(
             children: [
               Expanded(
@@ -709,6 +735,40 @@ class _PositionsOrdersWidgetState extends State<PositionsOrdersWidget>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBrokerSelector(BuildContext context) {
+    final brokerService = ref.read(brokerSelectionProvider.notifier);
+    final availableBrokers = brokerService.getAvailableBrokers();
+    final currentBroker = ref.watch(brokerSelectionProvider);
+
+    if (availableBrokers.isEmpty) {
+      return Text(
+        currentBroker ?? 'FINVASIA',
+        style: Theme.of(context).textTheme.bodyMedium,
+      );
+    }
+
+    return DropdownButton<String>(
+      value: currentBroker,
+      isExpanded: true,
+      underline: const SizedBox(),
+      items: availableBrokers.map((broker) {
+        return DropdownMenuItem<String>(
+          value: broker.brokerName,
+          child: Text(
+            broker.displayName,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        );
+      }).toList(),
+      onChanged: (String? newBroker) {
+        if (newBroker != null && newBroker != currentBroker) {
+          brokerService.switchBroker(newBroker);
+          _loadData(); // Reload data with new broker
+        }
+      },
     );
   }
 }

@@ -277,9 +277,10 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     if (value == null || value.isEmpty) {
       return 'Password is required';
     }
-    if (value.length < AppConstants.minPasswordLength) {
-      return 'Password must be at least ${AppConstants.minPasswordLength} characters';
-    }
+    // Temporarily removed password length validation
+    // if (value.length < AppConstants.minPasswordLength) {
+    //   return 'Password must be at least ${AppConstants.minPasswordLength} characters';
+    // }
     return null;
   }
 

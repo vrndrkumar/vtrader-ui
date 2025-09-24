@@ -27,13 +27,14 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       updatedAt: fields[7] as DateTime,
       preferences: fields[8] as UserPreferences,
       subscription: fields[9] as UserSubscription,
+      roles: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       ..writeByte(8)
       ..write(obj.preferences)
       ..writeByte(9)
-      ..write(obj.subscription);
+      ..write(obj.subscription)
+      ..writeByte(10)
+      ..write(obj.roles);
   }
 
   @override
@@ -179,6 +182,7 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
           UserPreferences.fromJson(json['preferences'] as Map<String, dynamic>),
       subscription: UserSubscription.fromJson(
           json['subscription'] as Map<String, dynamic>),
+      roles: json['roles'] as String?,
     );
 
 Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
@@ -192,6 +196,7 @@ Map<String, dynamic> _$UserModelToJson(UserModel instance) => <String, dynamic>{
       'updatedAt': instance.updatedAt.toIso8601String(),
       'preferences': instance.preferences,
       'subscription': instance.subscription,
+      'roles': instance.roles,
     };
 
 UserPreferences _$UserPreferencesFromJson(Map<String, dynamic> json) =>

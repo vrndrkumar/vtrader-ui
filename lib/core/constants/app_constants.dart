@@ -6,15 +6,24 @@ class AppConstants {
   static const String domain = 'vtrader.in';
   
   // API Configuration
-  static const String baseUrl = 'https://api.vtrader.in/v1';
+  static const String baseUrl = 'https://apivtrader.a.pinggy.link';
+  static const String testBaseUrl = 'http://localhost:3001';
   static const Duration defaultTimeout = Duration(seconds: 30);
   static const Duration retryDelay = Duration(seconds: 2);
   static const int maxRetries = 3;
+  
+  // API Endpoints
+  static const String loginEndpoint = '/users/api/login';
+  static const String logoutEndpoint = '/users/api/logout';
+  static const String refreshTokenEndpoint = '/users/api/refresh';
+  static const String userProfileEndpoint = '/users/api/profile';
   
   // Storage Keys
   static const String authTokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String userDataKey = 'user_data';
+  static const String userPreferencesKey = 'user_preferences';
+  static const String brokerPreferencesKey = 'broker_preferences';
   static const String themeModeKey = 'theme_mode';
   static const String onboardingKey = 'onboarding_complete';
   

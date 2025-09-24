@@ -269,7 +269,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             onFieldSubmitted: (_) {
               FocusScope.of(context).requestFocus(_confirmPasswordFocusNode);
             },
-            helperText: 'Must be at least ${AppConstants.minPasswordLength} characters',
+            helperText: 'Enter a secure password',
           ),
           const SizedBox(height: 16),
 
@@ -374,9 +374,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     if (value == null || value.isEmpty) {
       return 'Password is required';
     }
-    if (value.length < AppConstants.minPasswordLength) {
-      return 'Password must be at least ${AppConstants.minPasswordLength} characters';
-    }
+    // Temporarily removed password length validation
+    // if (value.length < AppConstants.minPasswordLength) {
+    //   return 'Password must be at least ${AppConstants.minPasswordLength} characters';
+    // }
     if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
       return 'Password must contain uppercase, lowercase, and number';
     }
