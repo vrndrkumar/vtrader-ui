@@ -245,17 +245,29 @@ class RealAuthService extends AuthService {
   @override
   Future<AuthResult> signOut() async {
     try {
+      print('Starting logout process...');
+      
       // Call logout endpoint if authenticated
       if (isAuthenticated) {
+        print('User is authenticated, calling logout API...');
         try {
-          await ApiService.instance.post(AppConstants.logoutEndpoint, useTestUrl: true);
+          final response = await ApiService.instance.post(AppConstants.logoutEndpoint, useTestUrl: true);
+          if (response.isSuccess) {
+            print('Logout API call successful');
+          } else {
+            print('Logout API call failed: ${response.errorMessage}');
+          }
         } catch (e) {
-          print('Logout API call failed: $e');
+          print('Logout API call exception: $e');
           // Continue with local logout even if API call fails
         }
+      } else {
+        print('User is not authenticated, skipping API call');
       }
       
+      print('Clearing local session...');
       await _clearSession();
+      print('Logout completed successfully');
       return AuthResult.success();
     } catch (e) {
       print('Sign out error: $e');
@@ -343,16 +355,19 @@ class RealAuthService extends AuthService {
 
   /// Clear session data
   Future<void> _clearSession() async {
+    print('Clearing session data...');
     _currentUser = null;
     _userPreferences = null;
     _defaultBroker = null;
     
+    print('Removing storage data...');
     await StorageService.clearUser();
     await StorageService.remove(AppConstants.userDataKey);
     await StorageService.remove(AppConstants.authTokenKey);
     await StorageService.remove(AppConstants.userPreferencesKey);
     await StorageService.remove(AppConstants.brokerPreferencesKey);
     await StorageService.remove(AppConstants.refreshTokenKey);
+    print('Session data cleared successfully');
   }
 
   /// Get user preferences

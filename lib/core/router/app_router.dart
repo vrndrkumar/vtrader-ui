@@ -13,6 +13,7 @@ import '../../features/trade/presentation/pages/add_trade_page.dart';
 import '../../features/broker/presentation/pages/brokers_page.dart';
 import '../../features/broker/presentation/pages/add_broker_page.dart';
 import '../widgets/main_layout.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 
 /// Router configuration provider
 final routerProvider = Provider<GoRouter>((ref) {
@@ -21,10 +22,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = AuthService.instance.isAuthenticated;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
+      final isHomeRoute = state.matchedLocation == '/';
 
-      // Redirect to sign in if not authenticated and not on auth route
-      if (!isAuthenticated && !isAuthRoute) {
-        return '/auth/sign-in';
+      // Redirect to dashboard if authenticated and on home route
+      if (isAuthenticated && isHomeRoute) {
+        return '/dashboard';
       }
 
       // Redirect to dashboard if authenticated and on auth route
@@ -35,12 +37,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // Root redirect
+      // Home page (landing page)
       GoRoute(
         path: '/',
-        redirect: (context, state) {
-          return AuthService.instance.isAuthenticated ? '/dashboard' : '/auth/sign-in';
-        },
+        name: 'home',
+        builder: (context, state) => const HomePage(),
       ),
 
       // Authentication routes
@@ -56,6 +57,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth/sign-up',
         name: 'signUp',
+        builder: (context, state) => const SignUpPage(),
+      ),
+      
+      // Direct login/register routes for homepage links
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const SignInPage(),
+      ),
+      GoRoute(
+        path: '/register',
+        name: 'register',
         builder: (context, state) => const SignUpPage(),
       ),
       GoRoute(
