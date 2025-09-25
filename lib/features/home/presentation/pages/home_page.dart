@@ -414,7 +414,7 @@ class HomePage extends StatelessWidget {
                   crossAxisCount: columns,
                   crossAxisSpacing: isMobile ? 16 : 24,
                   mainAxisSpacing: isMobile ? 16 : 24,
-                  childAspectRatio: isMobile ? 0.8 : 0.9, // Taller cards to accommodate metrics
+                  childAspectRatio: isMobile ? 2.0 : 2.2, // Even shorter cards - reduce space between boxes
                 ),
                 itemCount: 6,
                 itemBuilder: (context, index) {
@@ -576,16 +576,16 @@ class HomePage extends StatelessWidget {
               _showFeaturePopup(context, feature);
             },
             child: Container(
-              padding: EdgeInsets.all(isMobile ? 12 : 16),
+              padding: EdgeInsets.all(isMobile ? 6 : 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header with icon and title
+                  // Header with icon, title, and Learn More button
                   Row(
                     children: [
                       Container(
-                        width: isMobile ? 32 : 40,
-                        height: isMobile ? 32 : 40,
+                        width: isMobile ? 24 : 28,
+                        height: isMobile ? 24 : 28,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -595,91 +595,91 @@ class HomePage extends StatelessWidget {
                               (feature['color'] as Color).withOpacity(0.8),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
+                          borderRadius: BorderRadius.circular(isMobile ? 5 : 6),
                         ),
                         child: Icon(
                           feature['icon'] as IconData,
                           color: Colors.white,
-                          size: isMobile ? 18 : 22,
+                          size: isMobile ? 12 : 14,
                         ),
                       ),
-                      SizedBox(width: isMobile ? 12 : 16),
+                      SizedBox(width: isMobile ? 6 : 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               feature['title'] as String,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.lightOnBackground,
-                                fontSize: isMobile ? 14 : 16,
+                                fontSize: isMobile ? 11 : 13,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            SizedBox(height: 1),
                             Text(
                               feature['description'] as String,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppColors.lightOnSurfaceVariant,
-                                fontSize: isMobile ? 11 : 12,
+                                fontSize: isMobile ? 8 : 9,
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                  
-                  SizedBox(height: isMobile ? 16 : 20),
-                  
-                  // Feature-specific content section
-                  _buildFeatureSpecificContent(context, feature, isMobile),
-                  
-                  SizedBox(height: isMobile ? 12 : 16),
-                  
-                  // Learn More Button
-                  Container(
-                    width: double.infinity,
-                    height: isMobile ? 36 : 40,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          feature['color'] as Color,
-                          (feature['color'] as Color).withOpacity(0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
-                        onTap: () {
-                          _showFeaturePopup(context, feature);
-                        },
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Learn More',
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: isMobile ? 12 : 14,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(
-                                Icons.arrow_forward_rounded,
-                                color: Colors.white,
-                                size: isMobile ? 16 : 18,
-                              ),
+                      SizedBox(width: isMobile ? 4 : 6),
+                      // Small Learn More button on the right
+                      Container(
+                        height: isMobile ? 20 : 24,
+                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 6 : 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              feature['color'] as Color,
+                              (feature['color'] as Color).withOpacity(0.8),
                             ],
+                          ),
+                          borderRadius: BorderRadius.circular(isMobile ? 4 : 6),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(isMobile ? 4 : 6),
+                            onTap: () {
+                              _showFeaturePopup(context, feature);
+                            },
+                            child: Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Learn',
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isMobile ? 8 : 9,
+                                    ),
+                                  ),
+                                  SizedBox(width: 2),
+                                  Icon(
+                                    Icons.arrow_forward_rounded,
+                                    color: Colors.white,
+                                    size: isMobile ? 8 : 10,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
+                  ),
+                  
+                  SizedBox(height: isMobile ? 6 : 8),
+                  
+                  // Feature-specific content section
+                  Expanded(
+                    child: _buildFeatureSpecificContent(context, feature, isMobile),
                   ),
                 ],
               ),
@@ -718,10 +718,10 @@ class HomePage extends StatelessWidget {
       children: [
         // Recent journal entries
         Container(
-          padding: EdgeInsets.all(isMobile ? 8 : 12),
+          padding: EdgeInsets.all(isMobile ? 4 : 6),
           decoration: BoxDecoration(
             color: Colors.blue.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(4),
             border: Border.all(color: Colors.blue.withOpacity(0.2)),
           ),
           child: Column(
@@ -741,23 +741,23 @@ class HomePage extends StatelessWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 4),
               _buildJournalEntry('NIFTY 50 Breakout', 'Bullish', '+₹2,450', Colors.green, isMobile),
-              SizedBox(height: 4),
+              SizedBox(height: 2),
               _buildJournalEntry('BANKNIFTY Scalp', 'Neutral', '-₹850', Colors.red, isMobile),
-              SizedBox(height: 4),
+              SizedBox(height: 2),
               _buildJournalEntry('RELIANCE Swing', 'Bullish', '+₹3,200', Colors.green, isMobile),
             ],
           ),
         ),
-        SizedBox(height: isMobile ? 8 : 12),
+        SizedBox(height: isMobile ? 4 : 6),
         // Tags and stats
         Row(
           children: [
             Expanded(
               child: _buildStatCard('Total Entries', '247', Colors.blue, isMobile),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: 4),
             Expanded(
               child: _buildStatCard('This Week', '12', Colors.green, isMobile),
             ),
@@ -1203,10 +1203,10 @@ class HomePage extends StatelessWidget {
 
   Widget _buildStatCard(String label, String value, Color color, bool isMobile) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? 6 : 8),
+      padding: EdgeInsets.all(isMobile ? 4 : 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
