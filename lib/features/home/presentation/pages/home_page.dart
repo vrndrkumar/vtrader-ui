@@ -564,23 +564,24 @@ class HomePage extends StatelessWidget {
             colors: [
               Colors.white,
               Colors.grey[50]!,
+              Colors.grey[100]!,
             ],
           ),
-          borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
+          borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
           boxShadow: [
             BoxShadow(
-              color: (feature['color'] as Color).withOpacity(0.1),
-              blurRadius: isMobile ? 8 : 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: isMobile ? 12 : 16,
+              offset: const Offset(0, 6),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: isMobile ? 4 : 6,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: isMobile ? 6 : 8,
+              offset: const Offset(0, 3),
             ),
           ],
           border: Border.all(
-            color: (feature['color'] as Color).withOpacity(0.2),
+            color: Colors.grey[300]!,
             width: 1,
           ),
         ),
@@ -591,8 +592,8 @@ class HomePage extends StatelessWidget {
             onTap: () {
               _showFeaturePopup(context, feature);
             },
-            child: Container(
-              padding: EdgeInsets.all(isMobile ? 6 : 8),
+                  child: Container(
+                    padding: EdgeInsets.all(isMobile ? 12 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -600,31 +601,31 @@ class HomePage extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        width: isMobile ? 32 : 36,
-                        height: isMobile ? 32 : 36,
+                        width: isMobile ? 48 : 56,
+                        height: isMobile ? 48 : 56,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              feature['color'] as Color,
-                              (feature['color'] as Color).withOpacity(0.7),
-                              (feature['color'] as Color).withOpacity(0.9),
+                              Colors.grey[700]!,
+                              Colors.grey[600]!,
+                              Colors.grey[800]!,
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
+                          borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                           boxShadow: [
                             BoxShadow(
-                              color: (feature['color'] as Color).withOpacity(0.3),
-                              blurRadius: isMobile ? 6 : 8,
-                              offset: const Offset(0, 3),
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: isMobile ? 8 : 12,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         child: Icon(
                           feature['icon'] as IconData,
                           color: Colors.white,
-                          size: isMobile ? 16 : 18,
+                          size: isMobile ? 24 : 28,
                         ),
                       ),
                       SizedBox(width: isMobile ? 6 : 8),
@@ -637,39 +638,46 @@ class HomePage extends StatelessWidget {
                               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.lightOnBackground,
-                                fontSize: isMobile ? 11 : 13,
+                                fontSize: isMobile ? 14 : 16,
+                                letterSpacing: 0.5,
                               ),
                             ),
-                            SizedBox(height: 1),
+                            SizedBox(height: 2),
                             Text(
                               feature['description'] as String,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppColors.lightOnSurfaceVariant,
-                                fontSize: isMobile ? 8 : 9,
+                                fontSize: isMobile ? 10 : 12,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
                       ),
                       SizedBox(width: isMobile ? 4 : 6),
-                      // Small Learn More button on the right
+                      // Large, beautiful Learn More button
                       Container(
-                        height: isMobile ? 24 : 28,
-                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 10),
+                        height: isMobile ? 32 : 36,
+                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              feature['color'] as Color,
-                              (feature['color'] as Color).withOpacity(0.8),
-                              (feature['color'] as Color).withOpacity(0.9),
+                              Colors.blue[600]!,
+                              Colors.blue[700]!,
+                              Colors.blue[800]!,
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(isMobile ? 6 : 8),
+                          borderRadius: BorderRadius.circular(isMobile ? 8 : 12),
                           boxShadow: [
                             BoxShadow(
-                              color: (feature['color'] as Color).withOpacity(0.3),
+                              color: Colors.blue.withOpacity(0.2),
+                              blurRadius: isMobile ? 8 : 12,
+                              offset: const Offset(0, 4),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
                               blurRadius: isMobile ? 4 : 6,
                               offset: const Offset(0, 2),
                             ),
@@ -687,18 +695,19 @@ class HomePage extends StatelessWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    'Learn',
+                                    'Learn More',
                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: isMobile ? 8 : 9,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: isMobile ? 10 : 12,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
-                                  SizedBox(width: 2),
+                                  SizedBox(width: isMobile ? 4 : 6),
                                   Icon(
                                     Icons.arrow_forward_rounded,
                                     color: Colors.white,
-                                    size: isMobile ? 8 : 10,
+                                    size: isMobile ? 12 : 14,
                                   ),
                                 ],
                               ),
@@ -758,18 +767,18 @@ class HomePage extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.blue.withOpacity(0.08),
-                Colors.blue.withOpacity(0.03),
+                Colors.grey[100]!,
+                Colors.grey[50]!,
               ],
             ),
             borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
             border: Border.all(
-              color: Colors.blue.withOpacity(0.2),
+              color: Colors.grey[300]!,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -887,18 +896,18 @@ class HomePage extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.green.withOpacity(0.08),
-                Colors.green.withOpacity(0.03),
+                Colors.grey[100]!,
+                Colors.grey[50]!,
               ],
             ),
             borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
             border: Border.all(
-              color: Colors.green.withOpacity(0.2),
+              color: Colors.grey[300]!,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -994,18 +1003,18 @@ class HomePage extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.orange.withOpacity(0.08),
-                Colors.orange.withOpacity(0.03),
+                Colors.grey[100]!,
+                Colors.grey[50]!,
               ],
             ),
             borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
             border: Border.all(
-              color: Colors.orange.withOpacity(0.2),
+              color: Colors.grey[300]!,
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
