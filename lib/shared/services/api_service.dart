@@ -17,19 +17,10 @@ class ApiService {
   ApiService._();
 
   /// Base URL for API requests
-  String get baseUrl {
-    // Use environment variable or default to production
-    const String? env = String.fromEnvironment('API_BASE_URL');
-    if (env != null && env.isNotEmpty) {
-      return env;
-    }
-    
-    // Default to production URL
-    return 'https://apivtrader.a.pinggy.link';
-  }
+  String get baseUrl => AppConstants.baseUrl;
 
   /// Test URL for development
-  String get testBaseUrl => 'http://localhost:3001';
+  String get testBaseUrl => AppConstants.devBaseUrl;
 
   /// Get headers for API requests
   Map<String, String> get _headers {

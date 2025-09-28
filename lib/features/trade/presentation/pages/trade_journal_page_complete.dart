@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/models/trade_models.dart';
-import '../../../../shared/services/broker_service.dart';
 import '../../../../shared/services/trades_service.dart';
 import '../../../../shared/widgets/app_button.dart';
 import '../widgets/trade_card.dart';
@@ -51,9 +50,6 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
   }
 
   Future<void> _loadInitialData() async {
-    // Load broker data first from local storage if available
-    await _loadBrokerData();
-    
     await Future.wait([
       _loadTrades(),
       _loadFilterOptions(),
@@ -80,29 +76,16 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
     }
   }
 
-  Future<void> _loadBrokerData() async {
-    try {
-      // Load broker data from local storage (populated during login)
-      final brokerNames = BrokerService.instance.getBrokerNamesSync();
-      setState(() {
-        _availableBrokers = brokerNames;
-        // Set default selection to "All Brokers" if available
-        if (_availableBrokers.isNotEmpty && _selectedBroker == null) {
-          _selectedBroker = 'All Brokers';
-        }
-      });
-    } catch (e) {
-      print('Error loading broker data: $e');
-    }
-  }
-
   Future<void> _loadFilterOptions() async {
     try {
-      // Only load group names from API, brokers are already loaded from local storage
-      final groups = await TradesService.getGroupNames();
+      final results = await Future.wait([
+        TradesService.getGroupNames(),
+        TradesService.getBrokerNames(),
+      ]);
       
       setState(() {
-        _availableGroups = groups;
+        _availableGroups = results[0];
+        _availableBrokers = results[1];
       });
     } catch (e) {
       print('Error loading filter options: $e');
@@ -115,8 +98,7 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
         fromDate: _filters.fromDate,
         toDate: _filters.toDate,
         groupName: _selectedGroup,
-        // Don't pass "All Brokers" as a filter value
-        brokerName: _selectedBroker == 'All Brokers' ? null : _selectedBroker,
+        brokerName: _selectedBroker,
       );
     });
     _loadTrades();
@@ -126,7 +108,7 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
     setState(() {
       _filters = const TradeFilters();
       _selectedGroup = null;
-      _selectedBroker = 'All Brokers'; // Reset to default
+      _selectedBroker = null;
       _fromDateController.clear();
       _toDateController.clear();
     });
@@ -414,14 +396,14 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
         AppButton(
           text: 'Apply',
           onPressed: _applyFilters,
-          type: AppButtonType.primary,
+          variant: AppButtonVariant.primary,
           size: AppButtonSize.medium,
         ),
         const SizedBox(width: 8),
         AppButton(
           text: 'Clear',
           onPressed: _clearFilters,
-          type: AppButtonType.outline,
+          variant: AppButtonVariant.outlined,
           size: AppButtonSize.medium,
         ),
         if (isMobile) const Spacer(),
@@ -463,7 +445,7 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
             AppButton(
               text: 'Retry',
               onPressed: _loadTrades,
-              type: AppButtonType.primary,
+              variant: AppButtonVariant.primary,
             ),
           ],
         ),

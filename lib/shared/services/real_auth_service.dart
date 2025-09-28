@@ -6,6 +6,7 @@ import 'api_service.dart';
 import 'storage_service.dart';
 import 'master_data_service.dart';
 import 'auth_service.dart';
+import 'broker_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../main.dart';
 
@@ -124,6 +125,14 @@ class RealAuthService extends AuthService {
       } catch (e) {
         print('Failed to fetch master data after signin: $e');
         // Don't fail signin if master data fetch fails
+      }
+
+      // Initialize broker data after successful signin
+      try {
+        await BrokerService.instance.initializeBrokerData();
+      } catch (e) {
+        print('Failed to initialize broker data after signin: $e');
+        // Don't fail signin if broker data fetch fails
       }
 
       return AuthResult.success(user: user, token: loginData.token);
