@@ -48,6 +48,7 @@ abstract class AuthService {
     required String firstName,
     required String lastName,
     String? contactNumber,
+    String? theme,
   });
 
   /// Sign in with email and password
@@ -179,6 +180,7 @@ class MockAuthService extends AuthService {
     required String firstName,
     required String lastName,
     String? contactNumber,
+    String? theme,
   }) async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
@@ -211,31 +213,12 @@ class MockAuthService extends AuthService {
 
     _mockUsers.add(mockUser);
 
-    // Create user model
-    final user = UserModel(
-      id: _generateUserId(),
-      email: email,
-      firstName: firstName,
-      lastName: lastName,
-      contactNumber: contactNumber,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      preferences: const UserPreferences(),
-      subscription: const UserSubscription(),
+    // Registration successful - return success without auto-login
+    // User will need to login separately after registration
+    return AuthResult.success(
+      user: null, // No user object for registration
+      token: null, // No token for registration
     );
-
-    // Save session
-    await _saveSession(user);
-
-    // Fetch master data after successful signup
-    try {
-      await MasterDataService.instance.fetchIndices();
-    } catch (e) {
-      print('Failed to fetch master data after signup: $e');
-      // Don't fail signup if master data fetch fails
-    }
-
-    return AuthResult.success(user: user, token: _generateToken());
   }
 
   @override

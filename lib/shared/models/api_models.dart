@@ -3,6 +3,61 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'api_models.g.dart';
 
+/// Registration request model
+@JsonSerializable()
+class RegistrationRequest extends Equatable {
+  final String emailId;
+  final String userPassword;
+  final String mobileNumber;
+  final String firstName;
+  final String lastName;
+  final RegistrationPreferences preferences;
+
+  const RegistrationRequest({
+    required this.emailId,
+    required this.userPassword,
+    required this.mobileNumber,
+    required this.firstName,
+    required this.lastName,
+    required this.preferences,
+  });
+
+  factory RegistrationRequest.fromJson(Map<String, dynamic> json) =>
+      _$RegistrationRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RegistrationRequestToJson(this);
+
+  @override
+  List<Object?> get props => [
+        emailId,
+        userPassword,
+        mobileNumber,
+        firstName,
+        lastName,
+        preferences,
+      ];
+}
+
+/// Registration preferences model
+@JsonSerializable()
+class RegistrationPreferences extends Equatable {
+  final String theme;
+  final String prefType;
+
+  const RegistrationPreferences({
+    required this.theme,
+    required this.prefType,
+  });
+
+  factory RegistrationPreferences.fromJson(Map<String, dynamic> json) =>
+      _$RegistrationPreferencesFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RegistrationPreferencesToJson(this);
+
+  @override
+  List<Object?> get props => [theme, prefType];
+}
+
 /// Broker preferences model for API response
 @JsonSerializable()
 class BrokerPreferences extends Equatable {

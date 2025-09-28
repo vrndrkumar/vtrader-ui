@@ -7,6 +7,7 @@ import 'storage_service.dart';
 import 'master_data_service.dart';
 import 'auth_service.dart';
 import '../../core/constants/app_constants.dart';
+import '../../main.dart';
 
 /// Real API authentication service implementation
 class RealAuthService extends AuthService {
@@ -223,9 +224,27 @@ class RealAuthService extends AuthService {
   void _applyThemeFromPreferences() {
     if (_userPreferences?.webPreference?.theme != null) {
       final theme = _userPreferences!.webPreference!.theme.toLowerCase();
-      // This would typically update the app's theme
-      // For now, we'll just store it in preferences
-      StorageService.setString(AppConstants.themeModeKey, theme);
+      
+      // Convert API theme to ThemeMode
+      ThemeMode themeMode;
+      switch (theme) {
+        case 'dark':
+          themeMode = ThemeMode.dark;
+          break;
+        case 'light':
+          themeMode = ThemeMode.light;
+          break;
+        default:
+          themeMode = ThemeMode.system;
+      }
+      
+      // Store theme mode index for ThemeModeNotifier
+      StorageService.setInt(AppConstants.themeModeKey, themeMode.index);
+      
+      // Notify the global theme notifier to reload the theme
+      ThemeModeNotifier.globalInstance?.reloadTheme();
+      
+      print('Applied theme from API: $theme -> ThemeMode.$themeMode');
     }
   }
 
@@ -236,10 +255,52 @@ class RealAuthService extends AuthService {
     required String firstName,
     required String lastName,
     String? contactNumber,
+    String? theme,
   }) async {
-    // For now, signup is not implemented in the real API
-    // This would need to be implemented when the backend supports it
-    return AuthResult.failure('Sign up is not yet available');
+    try {
+      // Create registration request
+      final registrationRequest = RegistrationRequest(
+        emailId: email,
+        userPassword: password,
+        mobileNumber: contactNumber ?? '',
+        firstName: firstName,
+        lastName: lastName,
+        preferences: RegistrationPreferences(
+          theme: theme ?? 'light',
+          prefType: 'WEB', // For web platform
+        ),
+      );
+
+      // Make API call to registration endpoint
+      final response = await ApiService.instance.post<Map<String, dynamic>>(
+        AppConstants.registrationEndpoint,
+        body: registrationRequest.toJson(),
+        useTestUrl: true, // Use test host for now
+      );
+
+      if (!response.isSuccess) {
+        print('Registration API Error: ${response.errorMessage}');
+        return AuthResult.failure(response.errorMessage);
+      }
+
+      // Debug: Print the actual response data
+      print('Registration API Response Data: ${response.data}');
+      
+      // Check if response data is null or not a Map
+      if (response.data == null) {
+        return AuthResult.failure('Invalid response from server');
+      }
+
+      // Registration successful - return success without auto-login
+      // User will need to login separately after registration
+      return AuthResult.success(
+        user: null, // No user object for registration
+        token: null, // No token for registration
+      );
+    } catch (e) {
+      print('Registration error: $e');
+      return AuthResult.failure('Registration failed: ${e.toString()}');
+    }
   }
 
   @override

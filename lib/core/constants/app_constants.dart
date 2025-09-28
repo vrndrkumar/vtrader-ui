@@ -17,6 +17,7 @@ class AppConstants {
   static const String logoutEndpoint = '/users/api/logout';
   static const String refreshTokenEndpoint = '/users/api/refresh';
   static const String userProfileEndpoint = '/users/api/profile';
+  static const String registrationEndpoint = '/users/register';
   
   // Storage Keys
   static const String authTokenKey = 'auth_token';

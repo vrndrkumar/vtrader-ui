@@ -68,9 +68,15 @@ class VTraderApp extends ConsumerWidget {
   }
 }
 
+// Global theme notifier instance for access from services
+ThemeModeNotifier? _globalThemeNotifier;
+
 // Theme Mode Provider
 final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>(
-  (ref) => ThemeModeNotifier(),
+  (ref) {
+    _globalThemeNotifier = ThemeModeNotifier();
+    return _globalThemeNotifier!;
+  },
 );
 
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
@@ -80,21 +86,31 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
 
   static const String _themeModeKey = 'theme_mode';
 
-  void _loadThemeMode() async {
+  Future<void> _loadThemeMode() async {
     final themeIndex = await StorageService.getInt(_themeModeKey);
-    if (themeIndex != null) {
+    if (themeIndex != null && themeIndex < ThemeMode.values.length) {
       state = ThemeMode.values[themeIndex];
+      print('Loaded theme from storage: ThemeMode.${state.name}');
     }
   }
 
   void setThemeMode(ThemeMode themeMode) async {
     state = themeMode;
     await StorageService.setInt(_themeModeKey, themeMode.index);
+    print('Set theme mode: ThemeMode.${themeMode.name}');
   }
 
   void toggleTheme() {
     final newTheme = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     setThemeMode(newTheme);
   }
+
+  // Method to reload theme from storage (useful after login)
+  Future<void> reloadTheme() async {
+    await _loadThemeMode();
+  }
+
+  // Static method to access global instance
+  static ThemeModeNotifier? get globalInstance => _globalThemeNotifier;
 }
 

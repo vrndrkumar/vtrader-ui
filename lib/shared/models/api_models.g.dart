@@ -6,6 +6,42 @@ part of 'api_models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+RegistrationRequest _$RegistrationRequestFromJson(Map<String, dynamic> json) =>
+    RegistrationRequest(
+      emailId: json['emailId'] as String,
+      userPassword: json['userPassword'] as String,
+      mobileNumber: json['mobileNumber'] as String,
+      firstName: json['firstName'] as String,
+      lastName: json['lastName'] as String,
+      preferences: RegistrationPreferences.fromJson(
+          json['preferences'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$RegistrationRequestToJson(
+        RegistrationRequest instance) =>
+    <String, dynamic>{
+      'emailId': instance.emailId,
+      'userPassword': instance.userPassword,
+      'mobileNumber': instance.mobileNumber,
+      'firstName': instance.firstName,
+      'lastName': instance.lastName,
+      'preferences': instance.preferences,
+    };
+
+RegistrationPreferences _$RegistrationPreferencesFromJson(
+        Map<String, dynamic> json) =>
+    RegistrationPreferences(
+      theme: json['theme'] as String,
+      prefType: json['prefType'] as String,
+    );
+
+Map<String, dynamic> _$RegistrationPreferencesToJson(
+        RegistrationPreferences instance) =>
+    <String, dynamic>{
+      'theme': instance.theme,
+      'prefType': instance.prefType,
+    };
+
 BrokerPreferences _$BrokerPreferencesFromJson(Map<String, dynamic> json) =>
     BrokerPreferences(
       id: (json['id'] as num).toInt(),

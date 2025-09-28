@@ -37,6 +37,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   bool _isLoading = false;
   String? _errorMessage;
   bool _acceptTerms = false;
+  String _selectedTheme = 'light';
 
   @override
   void dispose() {
@@ -282,7 +283,86 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             validator: _validateConfirmPassword,
             onFieldSubmitted: (_) => _handleSignUp(),
           ),
+          const SizedBox(height: 16),
+
+          // Theme Selection
+          _buildThemeSelector(context),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThemeSelector(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Theme Preference',
+          style: AppTypography.labelMedium.copyWith(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildThemeOption(context, 'light', Icons.light_mode),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildThemeOption(context, 'dark', Icons.dark_mode),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThemeOption(BuildContext context, String theme, IconData icon) {
+    final isSelected = _selectedTheme == theme;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTheme = theme;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isSelected 
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+          color: isSelected 
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+              : Colors.transparent,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected 
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              theme == 'light' ? 'Light' : 'Dark',
+              style: AppTypography.bodyMedium.copyWith(
+                color: isSelected 
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurface,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -436,18 +516,21 @@ return 'Passwords do not match';
         contactNumber: _contactNumberController.text.trim().isNotEmpty 
             ? _contactNumberController.text.trim() 
             : null,
+        theme: _selectedTheme,
       );
 
       if (mounted) {
         if (result.success) {
-          // Show success message and navigate
+          // Show success message and navigate to login page
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Account created successfully!'),
+              content: const Text('Account created successfully! Please login to continue.'),
               backgroundColor: Theme.of(context).colorScheme.primary,
+              duration: const Duration(seconds: 3),
             ),
           );
-          context.go('/dashboard');
+          // Navigate to login page instead of dashboard
+          context.go('/login');
         } else {
           setState(() {
             _errorMessage = result.message ?? 'Sign up failed';
