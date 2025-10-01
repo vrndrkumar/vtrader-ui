@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/router/app_router.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -815,11 +816,11 @@ class HomePage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Total Entries', '247', Colors.blue, isMobile),
+              child: _buildStatCard('Total Entries', '247', Colors.blue, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
             SizedBox(width: 4),
             Expanded(
-              child: _buildStatCard('This Week', '12', Colors.green, isMobile),
+              child: _buildStatCard('This Week', '12', Colors.green, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
           ],
         ),
@@ -870,11 +871,11 @@ class HomePage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Total P&L', '₹1.85L', Colors.green, isMobile),
+              child: _buildStatCard('Total P&L', '₹1.85L', Colors.green, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
             SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Active Pos', '23', Colors.purple, isMobile),
+              child: _buildStatCard('Active Pos', '23', Colors.purple, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
           ],
         ),
@@ -978,11 +979,11 @@ class HomePage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Win Rate', '72.4%', Colors.green, isMobile),
+              child: _buildStatCard('Win Rate', '72.4%', Colors.green, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
             SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Sharpe', '1.85', Colors.blue, isMobile),
+              child: _buildStatCard('Sharpe', '1.85', Colors.blue, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
           ],
         ),
@@ -1051,11 +1052,11 @@ class HomePage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Max Risk', '2.5%', Colors.orange, isMobile),
+              child: _buildStatCard('Max Risk', '2.5%', Colors.orange, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
             SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('VaR 95%', '₹12K', Colors.red, isMobile),
+              child: _buildStatCard('VaR 95%', '₹12K', Colors.red, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
           ],
         ),
@@ -1106,11 +1107,11 @@ class HomePage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('Backtests', '47', Colors.red, isMobile),
+              child: _buildStatCard('Backtests', '47', Colors.red, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
             SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Best Strat', '78%', Colors.green, isMobile),
+              child: _buildStatCard('Best Strat', '78%', Colors.green, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
           ],
         ),
@@ -1164,11 +1165,11 @@ class HomePage extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _buildStatCard('YTD Return', '+24.8%', Colors.green, isMobile),
+              child: _buildStatCard('YTD Return', '+24.8%', Colors.green, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
             SizedBox(width: 8),
             Expanded(
-              child: _buildStatCard('Max DD', '-8.2%', Colors.red, isMobile),
+              child: _buildStatCard('Max DD', '-8.2%', Colors.red, isMobile, onTap: () => AppRouter.goToTrades(context)),
             ),
           ],
         ),
@@ -1360,52 +1361,73 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color, bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 6 : 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.1),
-            color.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isMobile ? 8 : 9,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+  Widget _buildStatCard(String label, String value, Color color, bool isMobile, {VoidCallback? onTap}) {
+    final isClickable = onTap != null;
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: MouseRegion(
+        cursor: isClickable ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: EdgeInsets.all(isMobile ? 6 : 8),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                color.withOpacity(isClickable ? 0.15 : 0.1),
+                color.withOpacity(isClickable ? 0.08 : 0.05),
+              ],
             ),
-          ),
-          SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isMobile ? 11 : 12,
-              fontWeight: FontWeight.bold,
-              color: color,
+            borderRadius: BorderRadius.circular(isMobile ? 8 : 10),
+            border: Border.all(
+              color: color.withOpacity(isClickable ? 0.4 : 0.3),
+              width: isClickable ? 1.5 : 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(isClickable ? 0.15 : 0.1),
+                blurRadius: isClickable ? 6 : 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: isMobile ? 8 : 9,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  if (isClickable)
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: isMobile ? 8 : 10,
+                      color: color.withOpacity(0.7),
+                    ),
+                ],
+              ),
+              SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: isMobile ? 11 : 12,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
