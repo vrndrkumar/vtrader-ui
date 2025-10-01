@@ -139,4 +139,181 @@ class TradesService {
   static Future<List<String>> getBrokerNames() async {
     return await BrokerService.instance.getBrokerNames();
   }
+
+  /// Get available tags for management
+  static Future<List<Tag>> getAvailableTags() async {
+    try {
+      // Get auth token
+      final token = await StorageService.getString(AppConstants.authTokenKey);
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      // Build URL for tags
+      final uri = Uri.parse('$_baseUrl${AppConstants.tagsEndpoint}');
+
+      print('Fetching available tags from: $uri');
+
+      // Make API request
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(_timeout);
+
+      print('Available tags API response status: ${response.statusCode}');
+      print('Available tags API response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body) as Map<String, dynamic>;
+        final tagsResponse = TagsResponse.fromJson(jsonData);
+        return tagsResponse.data;
+      } else {
+        throw Exception('Failed to fetch tags: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching available tags: $e');
+      rethrow;
+    }
+  }
+
+  /// Create a new tag
+  static Future<Tag> createTag({
+    required String name,
+    required bool applyToTrade,
+    required String tradeId,
+  }) async {
+    try {
+      // Get auth token
+      final token = await StorageService.getString(AppConstants.authTokenKey);
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      // Build URL for creating tags
+      final uri = Uri.parse('$_baseUrl${AppConstants.tagsEndpoint}');
+
+      print('Creating tag: $name');
+
+      // Prepare request body
+      final requestBody = {
+        'name': name,
+        'applyToTrade': applyToTrade,
+        'tradeId': tradeId,
+      };
+
+      // Make API request
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(requestBody),
+      ).timeout(_timeout);
+
+      print('Create tag API response status: ${response.statusCode}');
+      print('Create tag API response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = json.decode(response.body) as Map<String, dynamic>;
+        return Tag.fromJson(jsonData['data'] ?? jsonData);
+      } else {
+        throw Exception('Failed to create tag: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error creating tag: $e');
+      rethrow;
+    }
+  }
+
+  /// Apply tag to trade (all orders in the trade)
+  static Future<void> applyTagToTrade({
+    required int tagId,
+    required String tradeId,
+  }) async {
+    try {
+      // Get auth token
+      final token = await StorageService.getString(AppConstants.authTokenKey);
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      // Build URL for applying tag to trade
+      final uri = Uri.parse('$_baseUrl/trades/$tradeId/tags');
+
+      print('Applying tag $tagId to trade: $tradeId');
+
+      // Prepare request body
+      final requestBody = {
+        'tagId': tagId,
+      };
+
+      // Make API request
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(requestBody),
+      ).timeout(_timeout);
+
+      print('Apply tag to trade API response status: ${response.statusCode}');
+      print('Apply tag to trade API response body: ${response.body}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to apply tag to trade: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error applying tag to trade: $e');
+      rethrow;
+    }
+  }
+
+  /// Apply tag to individual order
+  static Future<void> applyTagToOrder({
+    required int tagId,
+    required int orderId,
+  }) async {
+    try {
+      // Get auth token
+      final token = await StorageService.getString(AppConstants.authTokenKey);
+      if (token == null) {
+        throw Exception('No authentication token found');
+      }
+
+      // Build URL for applying tag to order
+      final uri = Uri.parse('$_baseUrl/orders/$orderId/tags');
+
+      print('Applying tag $tagId to order: $orderId');
+
+      // Prepare request body
+      final requestBody = {
+        'tagId': tagId,
+      };
+
+      // Make API request
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(requestBody),
+      ).timeout(_timeout);
+
+      print('Apply tag to order API response status: ${response.statusCode}');
+      print('Apply tag to order API response body: ${response.body}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to apply tag to order: ${response.statusCode} - ${response.body}');
+      }
+    } catch (e) {
+      print('Error applying tag to order: $e');
+      rethrow;
+    }
+  }
 }
