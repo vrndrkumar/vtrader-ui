@@ -140,7 +140,7 @@ class _TradeDetailsDialogState extends State<TradeDetailsDialog> {
             Row(
               children: [
                 Expanded(
-                  child: _buildDetailItem('Quantity', widget.trade.totalQuantity),
+                  child: _buildDetailItem('Quantity', widget.trade.totalQuantity.toString()),
                 ),
                 Expanded(
                   child: _buildDetailItem('Entry Price', '₹${widget.trade.entryPriceValue.toStringAsFixed(2)}'),
@@ -367,14 +367,26 @@ class _TradeDetailsDialogState extends State<TradeDetailsDialog> {
             Row(
               children: [
                 Expanded(
+                  child: _buildOrderDetailItem('Group', order.getStringValue(order.groupName)),
+                ),
+                Expanded(
                   child: _buildOrderDetailItem('Placed Time', _formatDateTime(order.placedDateTime)),
                 ),
                 Expanded(
                   child: _buildOrderDetailItem('Updated Time', _formatDateTime(order.updatedDateTime)),
                 ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            Row(
+              children: [
                 Expanded(
-                  child: _buildOrderDetailItem('ID', order.getStringValue(order.id)),
+                  child: _buildOrderDetailItem('Order ID', order.getStringValue(order.id)),
                 ),
+                const Expanded(child: SizedBox()), // Empty space
+                const Expanded(child: SizedBox()), // Empty space
               ],
             ),
           ],

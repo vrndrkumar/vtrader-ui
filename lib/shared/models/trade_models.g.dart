@@ -12,10 +12,10 @@ Trade _$TradeFromJson(Map<String, dynamic> json) => Trade(
       brokerName: json['broker_name'] as String,
       symbolName: json['symbol_name'] as String,
       groupName: json['group_name'] as String,
-      totalQuantity: json['total_quantity'] as String,
-      avgEntryPrice: json['avg_entry_price'] as String,
-      avgExitPrice: json['avg_exit_price'] as String,
-      realizedPnl: json['realized_pnl'] as String,
+      totalQuantity: (json['total_quantity'] as num).toInt(),
+      avgEntryPrice: (json['avg_entry_price'] as num).toDouble(),
+      avgExitPrice: (json['avg_exit_price'] as num).toDouble(),
+      realizedPnl: (json['realized_pnl'] as num).toDouble(),
       unrealizedPnl: (json['unrealized_pnl'] as num).toDouble(),
       status: json['status'] as String,
       firstPlacedTime: json['first_placed_time'] as String,
@@ -64,6 +64,7 @@ Order _$OrderFromJson(Map<String, dynamic> json) => Order(
       placedTime: json['placedTime'] as String?,
       symbolName: json['symbolName'] as String?,
       orderStatus: json['orderStatus'] as String?,
+      groupName: json['groupName'] as String?,
     );
 
 Map<String, dynamic> _$OrderToJson(Order instance) => <String, dynamic>{
@@ -76,6 +77,7 @@ Map<String, dynamic> _$OrderToJson(Order instance) => <String, dynamic>{
       'placedTime': instance.placedTime,
       'symbolName': instance.symbolName,
       'orderStatus': instance.orderStatus,
+      'groupName': instance.groupName,
     };
 
 OrdersResponse _$OrdersResponseFromJson(Map<String, dynamic> json) =>
@@ -87,6 +89,35 @@ OrdersResponse _$OrdersResponseFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$OrdersResponseToJson(OrdersResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'data': instance.data,
+    };
+
+Tag _$TagFromJson(Map<String, dynamic> json) => Tag(
+      id: (json['id'] as num).toInt(),
+      userId: (json['userId'] as num).toInt(),
+      name: json['name'] as String,
+      createdAt: json['createdAt'] as String,
+      updatedAt: json['updatedAt'] as String,
+    );
+
+Map<String, dynamic> _$TagToJson(Tag instance) => <String, dynamic>{
+      'id': instance.id,
+      'userId': instance.userId,
+      'name': instance.name,
+      'createdAt': instance.createdAt,
+      'updatedAt': instance.updatedAt,
+    };
+
+TagsResponse _$TagsResponseFromJson(Map<String, dynamic> json) => TagsResponse(
+      status: json['status'] as bool,
+      data: (json['data'] as List<dynamic>)
+          .map((e) => Tag.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$TagsResponseToJson(TagsResponse instance) =>
     <String, dynamic>{
       'status': instance.status,
       'data': instance.data,

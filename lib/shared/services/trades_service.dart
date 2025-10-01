@@ -100,8 +100,10 @@ class TradesService {
         throw Exception('No authentication token found');
       }
 
-      // Build URL for group names
-      final uri = Uri.parse('$_baseUrl/trades/groups');
+      // Build URL for tags/group names
+      final uri = Uri.parse('$_baseUrl${AppConstants.tagsEndpoint}');
+
+      print('Fetching group names from: $uri');
 
       // Make API request
       final response = await http.get(
@@ -112,18 +114,24 @@ class TradesService {
         },
       ).timeout(_timeout);
 
+      print('Tags API response status: ${response.statusCode}');
+      print('Tags API response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
-        final groups = (jsonData['data'] as List?)?.cast<String>() ?? [];
-        return groups;
+        final tagsResponse = TagsResponse.fromJson(jsonData);
+        
+        // Extract group names from tags and add "All Groups" option
+        final groupNames = ['All Groups'] + tagsResponse.data.map((tag) => tag.name).toList();
+        return groupNames;
       } else {
-        // Return empty list if endpoint doesn't exist
-        return [];
+        // Return default list if endpoint doesn't exist
+        return ['All Groups'];
       }
     } catch (e) {
       print('Error fetching group names: $e');
-      // Return empty list on error
-      return [];
+      // Return default list on error
+      return ['All Groups'];
     }
   }
 

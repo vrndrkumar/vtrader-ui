@@ -103,6 +103,10 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
       
       setState(() {
         _availableGroups = groups;
+        // Set default selection to "All Groups" if available
+        if (_availableGroups.isNotEmpty && _selectedGroup == null) {
+          _selectedGroup = 'All Groups';
+        }
       });
     } catch (e) {
       print('Error loading filter options: $e');
@@ -114,7 +118,8 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
       _filters = TradeFilters(
         fromDate: _filters.fromDate,
         toDate: _filters.toDate,
-        groupName: _selectedGroup,
+        // Don't pass "All Groups" as a filter value
+        groupName: _selectedGroup == 'All Groups' ? null : _selectedGroup,
         // Don't pass "All Brokers" as a filter value
         brokerName: _selectedBroker == 'All Brokers' ? null : _selectedBroker,
       );
@@ -125,7 +130,7 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
   void _clearFilters() {
     setState(() {
       _filters = const TradeFilters();
-      _selectedGroup = null;
+      _selectedGroup = 'All Groups'; // Reset to default
       _selectedBroker = 'All Brokers'; // Reset to default
       _fromDateController.clear();
       _toDateController.clear();

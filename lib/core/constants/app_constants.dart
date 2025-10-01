@@ -27,6 +27,7 @@ class AppConstants {
   static const String registrationEndpoint = '/users/register';
   static const String tradesEndpoint = '/trades';
   static const String brokerMasterEndpoint = '/broker-mstr';
+  static const String tagsEndpoint = '/tags';
   
   // Storage Keys
   static const String authTokenKey = 'auth_token';

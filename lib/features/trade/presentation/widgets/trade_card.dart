@@ -24,125 +24,263 @@ class TradeCard extends StatelessWidget {
     final statusColor = _getStatusColor(trade.tradeStatus);
 
     return Card(
+      margin: EdgeInsets.symmetric(
+        horizontal: isMobile ? 8.0 : 0.0, 
+        vertical: 3.0, // Reduced vertical margin
+      ),
+      elevation: 1,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 12.0 : 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 12.0 : 16.0,
+            vertical: isMobile ? 8.0 : 10.0, // Reduced vertical padding
+          ),
+          child: isMobile ? _buildMobileLayout(context, pnlColor, statusColor) 
+                          : _buildDesktopLayout(context, pnlColor, statusColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context, Color pnlColor, Color statusColor) {
+    return Column(
+      children: [
+        // Row 1: Symbol + Status + P&L
+        Row(
+          children: [
+            // Symbol and Group
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          trade.symbolName,
-                          style: AppTypography.titleMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          trade.groupName,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    trade.symbolName,
+                    style: AppTypography.titleSmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: statusColor.withOpacity(0.3)),
+                  Text(
+                    trade.groupName,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 10,
                     ),
-                    child: Text(
-                      trade.status,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-              
-              const SizedBox(height: 12),
-              
-              // Stats row
-              if (isMobile) ...[
-                // Mobile layout - stacked
-                _buildStatRow(context, [
-                  _StatItem('Quantity', trade.totalQuantity),
-                  _StatItem('Orders', trade.orderCount.toString()),
-                ]),
-                const SizedBox(height: 8),
-                _buildStatRow(context, [
-                  _StatItem('Entry', '₹${trade.entryPriceValue.toStringAsFixed(2)}'),
-                  _StatItem('Exit', '₹${trade.exitPriceValue.toStringAsFixed(2)}'),
-                ]),
-              ] else ...[
-                // Desktop layout - single row
-                _buildStatRow(context, [
-                  _StatItem('Quantity', trade.totalQuantity),
-                  _StatItem('Entry', '₹${trade.entryPriceValue.toStringAsFixed(2)}'),
-                  _StatItem('Exit', '₹${trade.exitPriceValue.toStringAsFixed(2)}'),
-                  _StatItem('Orders', trade.orderCount.toString()),
-                ]),
+            ),
+            // Status Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: statusColor.withOpacity(0.3), width: 0.5),
+              ),
+              child: Text(
+                trade.status,
+                style: AppTypography.labelSmall.copyWith(
+                  color: statusColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 9,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // P&L
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '₹${trade.pnlValue.toStringAsFixed(2)}',
+                  style: AppTypography.titleSmall.copyWith(
+                    color: pnlColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  'P&L',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 9,
+                  ),
+                ),
               ],
-              
-              const SizedBox(height: 12),
-              
-              // Bottom row
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'P&L',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        Text(
-                          '₹${trade.pnlValue.toStringAsFixed(2)}',
-                          style: AppTypography.titleMedium.copyWith(
-                            color: pnlColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'Last Updated',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      Text(
-                        _formatDate(trade.lastUpdatedDateTime),
-                        style: AppTypography.bodySmall,
-                      ),
-                    ],
-                  ),
-                ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Row 2: Quick stats
+        Row(
+          children: [
+            _buildCompactStat(context, 'Qty', trade.totalQuantity.toString()),
+            const SizedBox(width: 12),
+            _buildCompactStat(context, 'Entry', '₹${trade.entryPriceValue.toStringAsFixed(2)}'),
+            const SizedBox(width: 12),
+            _buildCompactStat(context, 'Exit', '₹${trade.exitPriceValue.toStringAsFixed(2)}'),
+            const Spacer(),
+            Text(
+              _formatDate(trade.lastUpdatedDateTime),
+              style: AppTypography.labelSmall.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout(BuildContext context, Color pnlColor, Color statusColor) {
+    return Row(
+      children: [
+        // Symbol and Group (20%)
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                trade.symbolName,
+                style: AppTypography.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                trade.groupName,
+                style: AppTypography.labelSmall.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
-      ),
+        // Quantity (10%)
+        Expanded(
+          flex: 1,
+          child: _buildInlineStat(context, 'Qty', trade.totalQuantity.toString()),
+        ),
+        // Entry Price (15%)
+        Expanded(
+          flex: 1,
+          child: _buildInlineStat(context, 'Entry', '₹${trade.entryPriceValue.toStringAsFixed(2)}'),
+        ),
+        // Exit Price (15%)
+        Expanded(
+          flex: 1,
+          child: _buildInlineStat(context, 'Exit', '₹${trade.exitPriceValue.toStringAsFixed(2)}'),
+        ),
+        // P&L (15%)
+        Expanded(
+          flex: 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'P&L',
+                style: AppTypography.labelSmall.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                '₹${trade.pnlValue.toStringAsFixed(2)}',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: pnlColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Status + Date (20%)
+        Expanded(
+          flex: 2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: statusColor.withOpacity(0.3), width: 0.5),
+                ),
+                child: Text(
+                  trade.status,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _formatDate(trade.lastUpdatedDateTime),
+                style: AppTypography.labelSmall.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactStat(BuildContext context, String label, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label: ',
+          style: AppTypography.labelSmall.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 10,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTypography.bodySmall.copyWith(
+            fontWeight: FontWeight.w500,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineStat(BuildContext context, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          value,
+          style: AppTypography.bodyMedium.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

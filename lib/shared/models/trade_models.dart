@@ -21,16 +21,16 @@ class Trade {
   final String groupName;
   
   @JsonKey(name: 'total_quantity')
-  final String totalQuantity;
+  final int totalQuantity;
   
   @JsonKey(name: 'avg_entry_price')
-  final String avgEntryPrice;
+  final double avgEntryPrice;
   
   @JsonKey(name: 'avg_exit_price')
-  final String avgExitPrice;
+  final double avgExitPrice;
   
   @JsonKey(name: 'realized_pnl')
-  final String realizedPnl;
+  final double realizedPnl;
   
   @JsonKey(name: 'unrealized_pnl')
   final double unrealizedPnl;
@@ -67,10 +67,7 @@ class Trade {
   Map<String, dynamic> toJson() => _$TradeToJson(this);
 
   /// Get formatted P&L value
-  double get pnlValue {
-    final realized = double.tryParse(realizedPnl) ?? 0.0;
-    return realized + unrealizedPnl;
-  }
+  double get pnlValue => realizedPnl + unrealizedPnl;
 
   /// Check if trade is profitable
   bool get isProfitable => pnlValue > 0;
@@ -90,13 +87,13 @@ class Trade {
   }
 
   /// Get formatted quantity
-  int get quantityValue => int.tryParse(totalQuantity) ?? 0;
+  int get quantityValue => totalQuantity;
 
   /// Get formatted entry price
-  double get entryPriceValue => double.tryParse(avgEntryPrice) ?? 0.0;
+  double get entryPriceValue => avgEntryPrice;
 
   /// Get formatted exit price
-  double get exitPriceValue => double.tryParse(avgExitPrice) ?? 0.0;
+  double get exitPriceValue => avgExitPrice;
 
   /// Get parsed first placed time
   DateTime? get firstPlacedDateTime {
@@ -152,6 +149,7 @@ class Order {
   final String? placedTime;
   final String? symbolName;
   final String? orderStatus;
+  final String? groupName;
 
   const Order({
     this.id,
@@ -163,6 +161,7 @@ class Order {
     this.placedTime,
     this.symbolName,
     this.orderStatus,
+    this.groupName,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);
@@ -236,6 +235,42 @@ class OrdersResponse {
 
   factory OrdersResponse.fromJson(Map<String, dynamic> json) => _$OrdersResponseFromJson(json);
   Map<String, dynamic> toJson() => _$OrdersResponseToJson(this);
+}
+
+/// Tag/Group data model
+@JsonSerializable()
+class Tag {
+  final int id;
+  final int userId;
+  final String name;
+  final String createdAt;
+  final String updatedAt;
+
+  const Tag({
+    required this.id,
+    required this.userId,
+    required this.name,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);
+  Map<String, dynamic> toJson() => _$TagToJson(this);
+}
+
+/// Tags response model
+@JsonSerializable()
+class TagsResponse {
+  final bool status;
+  final List<Tag> data;
+
+  const TagsResponse({
+    required this.status,
+    required this.data,
+  });
+
+  factory TagsResponse.fromJson(Map<String, dynamic> json) => _$TagsResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$TagsResponseToJson(this);
 }
 
 /// Broker data model
