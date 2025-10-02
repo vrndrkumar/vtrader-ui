@@ -364,16 +364,10 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
               hintText: 'Select group',
               prefixIcon: Icon(Icons.group),
             ),
-            items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('All Groups'),
-              ),
-              ..._availableGroups.map((group) => DropdownMenuItem<String>(
-                value: group,
-                child: Text(group),
-              )),
-            ],
+            items: _availableGroups.map((group) => DropdownMenuItem<String>(
+              value: group,
+              child: Text(group),
+            )).toList(),
             onChanged: (value) {
               setState(() {
                 _selectedGroup = value;
@@ -390,16 +384,10 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
               hintText: 'Select broker',
               prefixIcon: Icon(Icons.account_balance),
             ),
-            items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('All Brokers'),
-              ),
-              ..._availableBrokers.map((broker) => DropdownMenuItem<String>(
-                value: broker,
-                child: Text(broker),
-              )),
-            ],
+            items: _availableBrokers.map((broker) => DropdownMenuItem<String>(
+              value: broker,
+              child: Text(broker),
+            )).toList(),
             onChanged: (value) {
               setState(() {
                 _selectedBroker = value;
