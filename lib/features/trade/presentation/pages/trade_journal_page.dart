@@ -98,18 +98,24 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
 
   Future<void> _loadFilterOptions() async {
     try {
+      print('🔄 Loading filter options...');
       // Only load group names from API, brokers are already loaded from local storage
       final groups = await TradesService.getGroupNames();
+      print('✅ Received ${groups.length} groups: $groups');
       
       setState(() {
         _availableGroups = groups;
+        print('📋 Available groups set in state: $_availableGroups');
         // Set default selection to "All Groups" if available
         if (_availableGroups.isNotEmpty && _selectedGroup == null) {
           _selectedGroup = 'All Groups';
+          print('✅ Default selection set to: $_selectedGroup');
         }
       });
+      print('✅ State updated successfully');
     } catch (e) {
-      print('Error loading filter options: $e');
+      print('❌ Error loading filter options: $e');
+      print('Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -354,6 +360,9 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
   }
 
   Widget _buildDropdownFilters(BuildContext context, bool isMobile) {
+    print('🎨 Building dropdown with ${_availableGroups.length} groups: $_availableGroups');
+    print('🎯 Current selected group: $_selectedGroup');
+    
     return Row(
       children: [
         Expanded(
@@ -364,11 +373,17 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
               hintText: 'Select group',
               prefixIcon: Icon(Icons.group),
             ),
-            items: _availableGroups.map((group) => DropdownMenuItem<String>(
-              value: group,
-              child: Text(group),
-            )).toList(),
+            items: _availableGroups.isEmpty 
+              ? [const DropdownMenuItem<String>(
+                  value: 'Loading...',
+                  child: Text('Loading...'),
+                )]
+              : _availableGroups.map((group) => DropdownMenuItem<String>(
+                  value: group,
+                  child: Text(group),
+                )).toList(),
             onChanged: (value) {
+              print('✏️ Dropdown changed to: $value');
               setState(() {
                 _selectedGroup = value;
               });
