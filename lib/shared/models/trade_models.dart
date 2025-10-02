@@ -240,21 +240,35 @@ class OrdersResponse {
 /// Tag/Group data model
 @JsonSerializable()
 class Tag {
-  final int id;
-  final int userId;
+  final int? id;
+  final int? userId;
   final String name;
   final String? createdAt;
   final String? updatedAt;
 
   const Tag({
-    required this.id,
-    required this.userId,
+    this.id,
+    this.userId,
     required this.name,
     this.createdAt,
     this.updatedAt,
   });
 
-  factory Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);
+  factory Tag.fromJson(Map<String, dynamic> json) {
+    try {
+      return Tag(
+        id: json['id'] as int?,
+        userId: json['userId'] as int?,
+        name: json['name'] as String,
+        createdAt: json['createdAt'] as String?,
+        updatedAt: json['updatedAt'] as String?,
+      );
+    } catch (e) {
+      print('Error parsing Tag: $e, JSON: $json');
+      rethrow;
+    }
+  }
+  
   Map<String, dynamic> toJson() => _$TagToJson(this);
 }
 

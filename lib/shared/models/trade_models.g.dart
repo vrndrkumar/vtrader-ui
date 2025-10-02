@@ -95,8 +95,8 @@ Map<String, dynamic> _$OrdersResponseToJson(OrdersResponse instance) =>
     };
 
 Tag _$TagFromJson(Map<String, dynamic> json) => Tag(
-      id: (json['id'] as num).toInt(),
-      userId: (json['userId'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt(),
+      userId: (json['userId'] as num?)?.toInt(),
       name: json['name'] as String,
       createdAt: json['createdAt'] as String?,
       updatedAt: json['updatedAt'] as String?,

@@ -1009,8 +1009,11 @@ class _ManageTagsDialogState extends State<_ManageTagsDialog> {
     });
 
     try {
+      if (tag.id == null) {
+        throw Exception('Tag ID is null');
+      }
       await TradesService.applyTagToTrade(
-        tagId: tag.id,
+        tagId: tag.id!,
         tradeId: widget.tradeId,
       );
 
