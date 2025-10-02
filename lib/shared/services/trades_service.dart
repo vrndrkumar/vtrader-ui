@@ -119,10 +119,14 @@ class TradesService {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body) as Map<String, dynamic>;
+        print('Tags JSON data: $jsonData');
+        
         final tagsResponse = TagsResponse.fromJson(jsonData);
+        print('Tags parsed successfully. Count: ${tagsResponse.data.length}');
         
         // Extract group names from tags and add "All Groups" option
         final groupNames = ['All Groups'] + tagsResponse.data.map((tag) => tag.name).toList();
+        print('Final group names: $groupNames');
         return groupNames;
       } else {
         // Return default list if endpoint doesn't exist

@@ -243,15 +243,15 @@ class Tag {
   final int id;
   final int userId;
   final String name;
-  final String createdAt;
-  final String updatedAt;
+  final String? createdAt;
+  final String? updatedAt;
 
   const Tag({
     required this.id,
     required this.userId,
     required this.name,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);

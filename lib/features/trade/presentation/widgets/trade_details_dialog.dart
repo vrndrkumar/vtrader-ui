@@ -953,7 +953,7 @@ class _ManageTagsDialogState extends State<_ManageTagsDialog> {
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       title: Text(tag.name),
-                      subtitle: Text('Created: ${_formatDate(tag.createdAt)}'),
+                      subtitle: Text(tag.createdAt != null ? 'Created: ${_formatDate(tag.createdAt!)}' : 'No creation date'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
