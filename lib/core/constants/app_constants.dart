@@ -6,18 +6,10 @@ class AppConstants {
   static const String domain = 'vtrader.in';
   
   // API Configuration
-  static const String prodBaseUrl = 'https://apivtrader.a.pinggy.link';
-  static const String devBaseUrl = 'http://localhost:3001';
+  static const String baseUrl = 'https://apivtrader.a.pinggy.link';
   static const Duration defaultTimeout = Duration(seconds: 30);
   static const Duration retryDelay = Duration(seconds: 2);
   static const int maxRetries = 3;
-  
-  // Environment-based API URL
-  static String get baseUrl {
-    // For now, always use dev environment as requested
-    // TODO: Implement automatic environment detection based on current URL
-    return devBaseUrl;
-  }
   
   // API Endpoints
   static const String loginEndpoint = '/users/api/login';

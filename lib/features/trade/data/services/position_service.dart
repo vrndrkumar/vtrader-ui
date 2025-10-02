@@ -40,7 +40,6 @@ class PositionService {
       final url = Uri.parse(ApiConfig.getPositionsUrl(
         userId: userId,
         brokerName: selectedBroker,
-        useTestUrl: true, // Use test URL for now
       ));
       
       print('Fetching positions from: $url');

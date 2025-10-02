@@ -127,17 +127,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(
         horizontal: isMobile ? 20.0 : 32.0,
-        vertical: isMobile ? 32.0 : 48.0,
+        vertical: isMobile ? 24.0 : 32.0,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.secondary.withOpacity(0.05),
-          ],
-        ),
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
@@ -145,58 +138,55 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryLight],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          // Dashboard icon
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.bar_chart_rounded,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          
+          // Title and subtitle
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Trading Dashboard',
+                  style: AppTypography.headlineMedium.copyWith(
+                    fontWeight: AppTypography.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
-                child: Icon(
-                  Icons.dashboard_rounded,
-                  color: Colors.white,
-                  size: 28,
+                const SizedBox(height: 2),
+                Text(
+                  'Monitor your trading performance and recent activity',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Trading Dashboard',
-                      style: AppTypography.headlineLarge.copyWith(
-                        fontWeight: AppTypography.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Monitor your trading performance and recent activity',
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
+          ),
+          
+          // Hamburger menu
+          IconButton(
+            onPressed: () {
+              // TODO: Implement menu functionality
+            },
+            icon: Icon(
+              Icons.menu_rounded,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -269,24 +259,17 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withOpacity(0.05),
-                color.withOpacity(0.02),
-              ],
-            ),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: color.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.08),
+                color: Colors.black.withOpacity(0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -296,22 +279,15 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 16,
-                    ),
+                  Icon(
+                    icon,
+                    color: color,
+                    size: 20,
                   ),
+                  const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -321,26 +297,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       style: AppTypography.caption.copyWith(
                         color: color,
                         fontWeight: AppTypography.medium,
-                        fontSize: 10,
+                        fontSize: 11,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(
                 value,
-                style: AppTypography.titleLarge.copyWith(
+                style: AppTypography.headlineMedium.copyWith(
                   fontWeight: AppTypography.bold,
-                  color: color,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 label,
-                style: AppTypography.bodySmall.copyWith(
+                style: AppTypography.bodyMedium.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: AppTypography.medium,
                 ),
               ),
             ],
@@ -424,15 +399,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.surface,
-            Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
           width: 1,
@@ -440,8 +408,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -450,19 +418,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.show_chart_rounded,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 12),
               Text(
                 'Cumulative P&L Trend',
                 style: AppTypography.titleMedium.copyWith(
@@ -470,20 +425,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 ),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Last 30 Days',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.success,
-                    fontWeight: AppTypography.medium,
-                  ),
-                ),
-              ),
+              _buildTimeFilterButtons(),
             ],
           ),
           const SizedBox(height: 20),
@@ -495,49 +437,87 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
+  Widget _buildTimeFilterButtons() {
+    return Row(
+      children: [
+        _buildTimeFilterButton('Daily', true),
+        const SizedBox(width: 8),
+        _buildTimeFilterButton('Weekly', false),
+        const SizedBox(width: 8),
+        _buildTimeFilterButton('Monthly', false),
+      ],
+    );
+  }
+
+  Widget _buildTimeFilterButton(String label, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        // TODO: Implement time filter functionality
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? AppColors.primary.withOpacity(0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected 
+                ? AppColors.primary.withOpacity(0.3)
+                : Theme.of(context).colorScheme.outline.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            color: isSelected 
+                ? AppColors.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: isSelected 
+                ? AppTypography.medium
+                : AppTypography.regular,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildChartPlaceholder() {
     final totalPnl = _trades?.fold<double>(0.0, (sum, trade) => sum + trade.pnlValue) ?? 0.0;
     final isPositive = totalPnl >= 0;
     
     return Container(
-      height: 200,
+      height: 250,
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            (isPositive ? AppColors.success : AppColors.error).withOpacity(0.1),
-            (isPositive ? AppColors.success : AppColors.error).withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: (isPositive ? AppColors.success : AppColors.error).withOpacity(0.2),
-          width: 1,
-        ),
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            isPositive ? Icons.trending_up_rounded : Icons.trending_down_rounded,
-            size: 48,
-            color: isPositive ? AppColors.success : AppColors.error,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Chart visualization coming soon',
-            style: AppTypography.bodyMedium.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          // Line chart area
+          Expanded(
+            flex: 2,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              child: CustomPaint(
+                painter: _LineChartPainter(isPositive),
+                size: const Size(double.infinity, double.infinity),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Cumulative P&L: ₹${totalPnl.toStringAsFixed(2)}',
-            style: AppTypography.titleMedium.copyWith(
-              fontWeight: AppTypography.semiBold,
-              color: isPositive ? AppColors.success : AppColors.error,
+          // Volume bars area
+          Expanded(
+            flex: 1,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              child: CustomPaint(
+                painter: _VolumeBarsPainter(),
+                size: const Size(double.infinity, double.infinity),
+              ),
             ),
           ),
         ],
@@ -896,45 +876,38 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       _QuickAction(
         title: 'Add Trade',
         subtitle: 'Record a new trade',
-        icon: Icons.add_circle_outline_rounded,
+        icon: Icons.add_rounded,
         color: AppColors.primary,
         onTap: () => AppRouter.goToAddTrade(context),
       ),
       _QuickAction(
         title: 'View Journal',
         subtitle: 'Browse all trades',
-        icon: Icons.book_outlined,
+        icon: Icons.description_rounded,
         color: AppColors.secondary,
         onTap: () => AppRouter.goToTrades(context),
       ),
       _QuickAction(
         title: 'Live Trading',
         subtitle: 'Open trading interface',
-        icon: Icons.trending_up_rounded,
+        icon: Icons.show_chart_rounded,
         color: AppColors.success,
         onTap: () => AppRouter.goToTradePage(context),
       ),
       _QuickAction(
         title: 'Analytics',
         subtitle: 'View performance',
-        icon: Icons.analytics_outlined,
+        icon: Icons.bar_chart_rounded,
         color: AppColors.warning,
         onTap: () => AppRouter.goToAnalytics(context),
       ),
     ];
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.surface,
-            Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
           width: 1,
@@ -942,68 +915,44 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.flash_on_rounded,
-                  color: AppColors.warning,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Quick Actions',
-                style: AppTypography.titleLarge.copyWith(
-                  fontWeight: AppTypography.semiBold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          
-          if (isMobile) ...[
-            ...actions.map((action) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildModernActionTile(context, action),
-            )),
-          ] else ...[
-            Column(
-              children: actions.map((action) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _buildModernActionTile(context, action),
-              )).toList(),
+          Text(
+            'Quick Actions',
+            style: AppTypography.titleMedium.copyWith(
+              fontWeight: AppTypography.semiBold,
             ),
-          ],
+          ),
+          const SizedBox(height: 16),
+          
+          Column(
+            children: actions.map((action) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _buildSimpleActionTile(context, action),
+            )).toList(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildModernActionTile(BuildContext context, _QuickAction action) {
+  Widget _buildSimpleActionTile(BuildContext context, _QuickAction action) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: action.onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: action.color.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: action.color.withOpacity(0.1),
               width: 1,
@@ -1011,44 +960,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           ),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: action.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  action.icon,
-                  color: action.color,
-                  size: 20,
-                ),
+              Icon(
+                action.icon,
+                color: action.color,
+                size: 18,
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      action.title,
-                      style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: AppTypography.semiBold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      action.subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  action.title,
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontWeight: AppTypography.medium,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: action.color.withOpacity(0.6),
               ),
             ],
           ),
@@ -1059,17 +984,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   Widget _buildRecentTrades(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.surface,
-            Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
           width: 1,
@@ -1077,8 +995,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -1087,27 +1005,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.history_rounded,
-                  color: AppColors.success,
-                  size: 20,
+              Text(
+                'Recent Trades',
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: AppTypography.semiBold,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Recent Trades',
-                  style: AppTypography.titleLarge.copyWith(
-                    fontWeight: AppTypography.semiBold,
-                  ),
-                ),
-              ),
+              const Spacer(),
               AppButton.text(
                 text: 'View All',
                 onPressed: () => AppRouter.goToTrades(context),
@@ -1115,7 +1019,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           
           if (_isLoading) ...[
             _buildLoadingTrades(),
@@ -1124,7 +1028,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           ] else if (_trades == null || _trades!.isEmpty) ...[
             _buildEmptyTrades(),
           ] else ...[
-            _buildTradesList(),
+            _buildTradesTable(),
           ],
         ],
       ),
@@ -1202,12 +1106,74 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildTradesList() {
+  Widget _buildTradesTable() {
     final recentTrades = _trades!.take(5).toList();
     
     return Column(
       children: [
-        ...recentTrades.map((trade) => _buildTradeItem(trade)),
+        // Table header
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Symbol',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: AppTypography.medium,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Qty',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: AppTypography.medium,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Status',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: AppTypography.medium,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'P&L',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: AppTypography.medium,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  'Entry/Exit',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: AppTypography.medium,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        
+        // Table rows
+        ...recentTrades.map((trade) => _buildTradeTableRow(trade)),
+        
         if (_trades!.length > 5) ...[
           const SizedBox(height: 8),
           Center(
@@ -1222,130 +1188,76 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildTradeItem(Trade trade) {
+  Widget _buildTradeTableRow(Trade trade) {
     final pnlColor = trade.pnlValue >= 0 ? AppColors.success : AppColors.error;
     final statusColor = trade.status == 'OPEN' ? AppColors.warning : 
                        trade.status == 'CLOSED' ? AppColors.success : AppColors.primary;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.surface,
-            pnlColor.withOpacity(0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: pnlColor.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: pnlColor.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              trade.status == 'OPEN' ? Icons.play_circle_outline_rounded :
-              trade.status == 'CLOSED' ? Icons.check_circle_outline_rounded :
-              Icons.pause_circle_outline_rounded,
-              color: statusColor,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  trade.symbolName,
-                  style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: AppTypography.semiBold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        trade.status,
-                        style: AppTypography.caption.copyWith(
-                          color: statusColor,
-                          fontWeight: AppTypography.medium,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Qty: ${trade.quantityValue}',
-                      style: AppTypography.caption.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      trade.groupName,
-                      style: AppTypography.caption.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            flex: 2,
+            child: Text(
+              trade.symbolName,
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: AppTypography.medium,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '₹${trade.pnlValue.toStringAsFixed(2)}',
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: AppTypography.bold,
-                  color: pnlColor,
+          Expanded(
+            child: Text(
+              trade.quantityValue.toString(),
+              style: AppTypography.bodySmall.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                trade.status,
+                style: AppTypography.caption.copyWith(
+                  color: statusColor,
+                  fontWeight: AppTypography.medium,
+                  fontSize: 10,
                 ),
               ),
-              const SizedBox(height: 2),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: pnlColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  trade.pnlValue >= 0 ? 'Profit' : 'Loss',
-                  style: AppTypography.caption.copyWith(
-                    color: pnlColor,
-                    fontWeight: AppTypography.medium,
-                    fontSize: 9,
-                  ),
-                ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              '₹${trade.pnlValue.toStringAsFixed(2)}',
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: AppTypography.medium,
+                color: pnlColor,
               ),
-            ],
+            ),
+          ),
+          Expanded(
+            child: Text(
+              '₹${trade.entryPriceValue.toStringAsFixed(2)}/₹${trade.exitPriceValue.toStringAsFixed(2)}',
+              style: AppTypography.bodySmall.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 10,
+              ),
+            ),
           ),
         ],
       ),
@@ -1423,15 +1335,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).colorScheme.surface,
-            Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
           width: 1,
@@ -1439,62 +1344,36 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.analytics_rounded,
-                  color: AppColors.warning,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Additional Metrics',
-                style: AppTypography.titleMedium.copyWith(
-                  fontWeight: AppTypography.semiBold,
-                ),
-              ),
-            ],
+          Text(
+            'Additional Metrics',
+            style: AppTypography.titleMedium.copyWith(
+              fontWeight: AppTypography.semiBold,
+            ),
           ),
           const SizedBox(height: 16),
           
-          _buildMetricItem('Best Trade', bestTrade.symbolName, '₹${bestTrade.pnlValue.toStringAsFixed(2)}', AppColors.success),
-          _buildMetricItem('Worst Trade', worstTrade.symbolName, '₹${worstTrade.pnlValue.toStringAsFixed(2)}', AppColors.error),
-          _buildMetricItem('Avg Trade Size', '${avgTradeSize.toStringAsFixed(0)}', 'units', AppColors.primary),
-          _buildMetricItem('Total Volume', '₹${(totalVolume / 1000).toStringAsFixed(1)}K', 'traded', AppColors.secondary),
+          _buildSimpleMetricItem('Best Trade', bestTrade.symbolName, '₹${bestTrade.pnlValue.toStringAsFixed(2)}', AppColors.success),
+          _buildSimpleMetricItem('Worst Trade', worstTrade.symbolName, '₹${worstTrade.pnlValue.toStringAsFixed(2)}', AppColors.error),
+          _buildSimpleMetricItem('Avg Trade Size', '${avgTradeSize.toStringAsFixed(0)}', 'units', AppColors.primary),
+          _buildSimpleMetricItem('Total Volume', '₹${(totalVolume / 1000).toStringAsFixed(1)}K', 'traded', AppColors.secondary),
         ],
       ),
     );
   }
 
-  Widget _buildMetricItem(String label, String value, String subValue, Color color) {
+  Widget _buildSimpleMetricItem(String label, String value, String subValue, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Container(
-            width: 4,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1595,4 +1474,81 @@ class _QuickAction {
     required this.onTap,
   });
 }
+
+class _LineChartPainter extends CustomPainter {
+  final bool isPositive;
+
+  _LineChartPainter(this.isPositive);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = isPositive ? AppColors.success : AppColors.error
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    final points = _generateChartPoints(size);
+    
+    if (points.isNotEmpty) {
+      path.moveTo(points.first.dx, points.first.dy);
+      for (int i = 1; i < points.length; i++) {
+        path.lineTo(points[i].dx, points[i].dy);
+      }
+    }
+
+    canvas.drawPath(path, paint);
+
+    // Draw points
+    final pointPaint = Paint()
+      ..color = isPositive ? AppColors.success : AppColors.error
+      ..style = PaintingStyle.fill;
+
+    for (final point in points) {
+      canvas.drawCircle(point, 3.0, pointPaint);
+    }
+  }
+
+  List<Offset> _generateChartPoints(Size size) {
+    final points = <Offset>[];
+    final width = size.width;
+    final height = size.height;
+    
+    // Generate a simple upward trend for positive, downward for negative
+    for (int i = 0; i < 10; i++) {
+      final x = (width / 9) * i;
+      final y = isPositive 
+          ? height - (height / 10) * (i + 1) + (i * 2) // Upward trend
+          : (height / 10) * (i + 1) - (i * 2); // Downward trend
+      points.add(Offset(x, y));
+    }
+    
+    return points;
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _VolumeBarsPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.primary.withOpacity(0.6)
+      ..style = PaintingStyle.fill;
+
+    final barWidth = size.width / 10;
+    
+    for (int i = 0; i < 10; i++) {
+      final x = barWidth * i;
+      final barHeight = (size.height * 0.3) + (i % 3) * (size.height * 0.1);
+      final rect = Rect.fromLTWH(x + 2, size.height - barHeight, barWidth - 4, barHeight);
+      canvas.drawRect(rect, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 

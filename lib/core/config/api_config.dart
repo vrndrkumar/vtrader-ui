@@ -18,27 +18,23 @@ class ApiConfig {
   static const Duration requestTimeout = Duration(seconds: 30);
   
   // Helper methods
-  static String getPositionsUrl({String? userId, String? brokerName, bool useTestUrl = true}) {
-    final baseUrl = useTestUrl ? AppConstants.devBaseUrl : AppConstants.prodBaseUrl;
+  static String getPositionsUrl({String? userId, String? brokerName}) {
     final uid = userId ?? '31'; // Fallback for testing
     final broker = brokerName ?? 'FINVASIA'; // Fallback for testing
-    return '$baseUrl$positionsEndpoint?userId=$uid&brokerName=$broker';
+    return '${AppConstants.baseUrl}$positionsEndpoint?userId=$uid&brokerName=$broker';
   }
   
-  static String getOrdersUrl({String? userId, String? brokerName, bool useTestUrl = true}) {
-    final baseUrl = useTestUrl ? AppConstants.devBaseUrl : AppConstants.prodBaseUrl;
+  static String getOrdersUrl({String? userId, String? brokerName}) {
     final uid = userId ?? '31'; // Fallback for testing
     final broker = brokerName ?? 'FINVASIA'; // Fallback for testing
-    return '$baseUrl$ordersEndpoint?userId=$uid&brokerName=$broker';
+    return '${AppConstants.baseUrl}$ordersEndpoint?userId=$uid&brokerName=$broker';
   }
   
-  static String getMarketDataUrl(String symbol, {bool useTestUrl = true}) {
-    final baseUrl = useTestUrl ? AppConstants.devBaseUrl : AppConstants.prodBaseUrl;
-    return '$baseUrl$marketDataEndpoint?symbol=$symbol';
+  static String getMarketDataUrl(String symbol) {
+    return '${AppConstants.baseUrl}$marketDataEndpoint?symbol=$symbol';
   }
   
-  static String getIndicesUrl({bool useTestUrl = true}) {
-    final baseUrl = useTestUrl ? AppConstants.devBaseUrl : AppConstants.prodBaseUrl;
-    return '$baseUrl$indicesEndpoint';
+  static String getIndicesUrl() {
+    return '${AppConstants.baseUrl}$indicesEndpoint';
   }
 }

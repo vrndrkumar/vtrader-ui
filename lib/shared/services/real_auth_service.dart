@@ -87,7 +87,6 @@ class RealAuthService extends AuthService {
           'username': email,
           'password': password,
         },
-        useTestUrl: true, // Use test host for now
       );
 
       if (!response.isSuccess) {
@@ -284,7 +283,6 @@ class RealAuthService extends AuthService {
       final response = await ApiService.instance.post<Map<String, dynamic>>(
         AppConstants.registrationEndpoint,
         body: registrationRequest.toJson(),
-        useTestUrl: true, // Use test host for now
       );
 
       if (!response.isSuccess) {
@@ -321,7 +319,7 @@ class RealAuthService extends AuthService {
       if (isAuthenticated) {
         print('User is authenticated, calling logout API...');
         try {
-          final response = await ApiService.instance.post(AppConstants.logoutEndpoint, useTestUrl: true);
+          final response = await ApiService.instance.post(AppConstants.logoutEndpoint);
           if (response.isSuccess) {
             print('Logout API call successful');
           } else {
@@ -406,7 +404,6 @@ class RealAuthService extends AuthService {
     try {
       final response = await ApiService.instance.post<Map<String, dynamic>>(
         AppConstants.refreshTokenEndpoint,
-        useTestUrl: true, // Use test host for now
       );
 
       if (!response.isSuccess) {

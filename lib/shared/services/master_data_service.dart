@@ -48,7 +48,7 @@ class MasterDataService {
 
     try {
       final response = await http.get(
-        Uri.parse(ApiConfig.getIndicesUrl(useTestUrl: true)), // Use test URL for now
+        Uri.parse(ApiConfig.getIndicesUrl()),
         headers: ApiConfig.defaultHeaders,
       ).timeout(ApiConfig.requestTimeout);
 

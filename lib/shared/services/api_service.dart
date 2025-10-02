@@ -19,9 +19,6 @@ class ApiService {
   /// Base URL for API requests
   String get baseUrl => AppConstants.baseUrl;
 
-  /// Test URL for development
-  String get testBaseUrl => AppConstants.devBaseUrl;
-
   /// Get headers for API requests
   Map<String, String> get _headers {
     final token = StorageService.getString(AppConstants.authTokenKey);
@@ -37,10 +34,9 @@ class ApiService {
     String endpoint, {
     Map<String, dynamic>? body,
     Map<String, String>? additionalHeaders,
-    bool useTestUrl = false,
   }) async {
     try {
-      final url = Uri.parse('${useTestUrl ? testBaseUrl : baseUrl}$endpoint');
+      final url = Uri.parse('$baseUrl$endpoint');
       final headers = {..._headers, ...?additionalHeaders};
       
       final response = await http.post(
@@ -64,10 +60,9 @@ class ApiService {
     String endpoint, {
     Map<String, String>? queryParams,
     Map<String, String>? additionalHeaders,
-    bool useTestUrl = false,
   }) async {
     try {
-      final uri = Uri.parse('${useTestUrl ? testBaseUrl : baseUrl}$endpoint');
+      final uri = Uri.parse('$baseUrl$endpoint');
       final url = queryParams != null 
           ? uri.replace(queryParameters: queryParams)
           : uri;
@@ -94,10 +89,9 @@ class ApiService {
     String endpoint, {
     Map<String, dynamic>? body,
     Map<String, String>? additionalHeaders,
-    bool useTestUrl = false,
   }) async {
     try {
-      final url = Uri.parse('${useTestUrl ? testBaseUrl : baseUrl}$endpoint');
+      final url = Uri.parse('$baseUrl$endpoint');
       final headers = {..._headers, ...?additionalHeaders};
       
       final response = await http.put(
@@ -120,10 +114,9 @@ class ApiService {
   Future<ApiResponse<T>> delete<T>(
     String endpoint, {
     Map<String, String>? additionalHeaders,
-    bool useTestUrl = false,
   }) async {
     try {
-      final url = Uri.parse('${useTestUrl ? testBaseUrl : baseUrl}$endpoint');
+      final url = Uri.parse('$baseUrl$endpoint');
       final headers = {..._headers, ...?additionalHeaders};
       
       final response = await http.delete(
