@@ -291,17 +291,11 @@ class _BrokerIntegrationWizardState extends ConsumerState<BrokerIntegrationWizar
                   TextFormField(
                     controller: _secretKeyController,
                     decoration: const InputDecoration(
-                      labelText: 'Secret Key',
-                      hintText: 'Enter your secret key',
+                      labelText: 'Secret Key (Optional)',
+                      hintText: 'Enter your secret key if required',
                       border: OutlineInputBorder(),
                     ),
                     obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Secret Key is required';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -746,14 +740,17 @@ class _BrokerIntegrationWizardState extends ConsumerState<BrokerIntegrationWizar
     notifier.setBrokerInfo(brokerInfo);
     
     // Create preferences
+    final currentState = ref.read(brokerIntegrationProvider);
     final preferences = BrokerPreferences(
-      defaultBroker: ref.read(brokerIntegrationProvider).isDefault,
       quantity: BrokerQuantity(
         nifty: int.tryParse(_niftyController.text) ?? 150,
         sensex: int.tryParse(_sensexController.text) ?? 60,
         stocks: int.tryParse(_stocksController.text) ?? 10,
         banknifty: int.tryParse(_bankniftyController.text) ?? 70,
       ),
+      brokerName: currentState.selectedBrokerName ?? '',
+      displayName: '${currentState.selectedBrokerName}[${_userIdController.text}]',
+      defaultBroker: currentState.isDefault,
     );
     
     notifier.setPreferences(preferences);

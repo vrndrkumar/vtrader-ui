@@ -51,12 +51,15 @@ class BrokersNotifier extends StateNotifier<AsyncValue<List<Broker>>> {
 
   Future<void> updateBroker(int brokerId, Broker broker) async {
     try {
+      print('Provider: Updating broker $brokerId');
       final updatedBroker = await BrokerService.updateBroker(brokerId, broker);
-      state.whenData((brokers) {
-        final updatedBrokers = brokers.map((b) => b.id == brokerId ? updatedBroker : b).toList();
-        state = AsyncValue.data(updatedBrokers);
-      });
+      print('Provider: Received updated broker from API: ${updatedBroker.preferences.quantity.nifty}');
+      
+      // Force a complete refresh by reloading all brokers from API
+      await loadBrokers();
+      print('Provider: Complete refresh completed');
     } catch (error, stackTrace) {
+      print('Provider: Error updating broker: $error');
       state = AsyncValue.error(error, stackTrace);
     }
   }
@@ -64,9 +67,10 @@ class BrokersNotifier extends StateNotifier<AsyncValue<List<Broker>>> {
   Future<void> deleteBroker(int brokerId) async {
     try {
       await BrokerService.deleteBroker(brokerId);
-      state.whenData((brokers) {
-        final filteredBrokers = brokers.where((b) => b.id != brokerId).toList();
-        state = AsyncValue.data(filteredBrokers);
+      
+      // Update the state by removing the deleted broker
+      state = state.whenData((brokers) {
+        return brokers.where((b) => b.id != brokerId).toList();
       });
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -79,11 +83,14 @@ class BrokersNotifier extends StateNotifier<AsyncValue<List<Broker>>> {
         // Update all brokers to set defaultBroker to false
         final updatedBrokers = brokers.map((broker) {
           final updatedPreferences = BrokerPreferences(
-            defaultBroker: broker.id == brokerId,
             quantity: broker.preferences.quantity,
+            brokerName: broker.preferences.brokerName,
+            displayName: broker.preferences.displayName,
+            defaultBroker: broker.id == brokerId,
           );
           return Broker(
             id: broker.id,
+            userId: broker.userId,
             brokerInfo: broker.brokerInfo,
             isActive: broker.isActive,
             brokerName: broker.brokerName,
@@ -175,9 +182,11 @@ class BrokerIntegrationNotifier extends StateNotifier<BrokerIntegrationState> {
         brokerInfo: state.brokerInfo!,
         isActive: true,
         brokerName: state.selectedBrokerName ?? '',
-        preferences: state.preferences ?? const BrokerPreferences(
+        preferences: state.preferences ?? BrokerPreferences(
+          quantity: const BrokerQuantity(nifty: 150, sensex: 60, stocks: 10, banknifty: 70),
+          brokerName: state.selectedBrokerName ?? '',
+          displayName: '${state.selectedBrokerName}[User]',
           defaultBroker: false,
-          quantity: BrokerQuantity(nifty: 150, sensex: 60, stocks: 10, banknifty: 70),
         ),
       );
       

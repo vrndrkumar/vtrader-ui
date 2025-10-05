@@ -49,12 +49,16 @@ class BrokerQuantity {
 /// Broker preferences
 @JsonSerializable()
 class BrokerPreferences {
-  final bool defaultBroker;
   final BrokerQuantity quantity;
+  final String brokerName;
+  final String displayName;
+  final bool defaultBroker;
 
   const BrokerPreferences({
-    required this.defaultBroker,
     required this.quantity,
+    required this.brokerName,
+    required this.displayName,
+    required this.defaultBroker,
   });
 
   factory BrokerPreferences.fromJson(Map<String, dynamic> json) => _$BrokerPreferencesFromJson(json);
@@ -65,6 +69,7 @@ class BrokerPreferences {
 @JsonSerializable()
 class Broker {
   final int? id;
+  final int? userId;
   final BrokerInfo brokerInfo;
   final bool isActive;
   final String brokerName;
@@ -74,6 +79,7 @@ class Broker {
 
   const Broker({
     this.id,
+    this.userId,
     required this.brokerInfo,
     required this.isActive,
     required this.brokerName,
@@ -82,7 +88,24 @@ class Broker {
     this.updatedAt,
   });
 
-  factory Broker.fromJson(Map<String, dynamic> json) => _$BrokerFromJson(json);
+  factory Broker.fromJson(Map<String, dynamic> json) {
+    try {
+      return Broker(
+        id: json['id'] as int?,
+        userId: json['userId'] as int?,
+        brokerInfo: BrokerInfo.fromJson(json['brokerInfo'] as Map<String, dynamic>),
+        isActive: json['isActive'] as bool,
+        brokerName: json['brokerName'] as String,
+        preferences: BrokerPreferences.fromJson(json['preferences'] as Map<String, dynamic>),
+        createdAt: json['createdAt'] as String?,
+        updatedAt: json['updatedAt'] as String?,
+      );
+    } catch (e) {
+      print('Error parsing Broker: $e, JSON: $json');
+      rethrow;
+    }
+  }
+  
   Map<String, dynamic> toJson() => _$BrokerToJson(this);
 }
 

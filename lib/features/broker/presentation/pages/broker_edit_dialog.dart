@@ -167,16 +167,10 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
                       TextFormField(
                         controller: _secretKeyController,
                         decoration: const InputDecoration(
-                          labelText: 'Secret Key',
+                          labelText: 'Secret Key (Optional)',
                           border: OutlineInputBorder(),
                         ),
                         obscureText: true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Secret Key is required';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -320,6 +314,7 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
     if (_formKey.currentState!.validate()) {
       final updatedBroker = Broker(
         id: widget.broker.id,
+        userId: widget.broker.userId,
         brokerInfo: BrokerInfo(
           userId: _userIdController.text,
           password: _passwordController.text,
@@ -332,13 +327,15 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
         isActive: _isActive,
         brokerName: widget.broker.brokerName,
         preferences: BrokerPreferences(
-          defaultBroker: _isDefault,
           quantity: BrokerQuantity(
-            nifty: int.tryParse(_niftyController.text) ?? 150,
-            sensex: int.tryParse(_sensexController.text) ?? 60,
-            stocks: int.tryParse(_stocksController.text) ?? 10,
-            banknifty: int.tryParse(_bankniftyController.text) ?? 70,
+            nifty: int.tryParse(_niftyController.text) ?? widget.broker.preferences.quantity.nifty,
+            sensex: int.tryParse(_sensexController.text) ?? widget.broker.preferences.quantity.sensex,
+            stocks: int.tryParse(_stocksController.text) ?? widget.broker.preferences.quantity.stocks,
+            banknifty: int.tryParse(_bankniftyController.text) ?? widget.broker.preferences.quantity.banknifty,
           ),
+          brokerName: widget.broker.preferences.brokerName,
+          displayName: widget.broker.preferences.displayName,
+          defaultBroker: _isDefault,
         ),
         createdAt: widget.broker.createdAt,
         updatedAt: widget.broker.updatedAt,

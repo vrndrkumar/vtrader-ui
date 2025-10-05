@@ -11,10 +11,9 @@ class BrokerService {
   /// Get all brokers for the current user
   static Future<BrokersResponse> getBrokers() async {
     try {
-      final url = '${AppConstants.baseUrl}$_basePath';
-      print('Fetching brokers from: $url');
+      print('Fetching brokers from: ${AppConstants.baseUrl}$_basePath');
       
-      final response = await ApiService.instance.get(url);
+      final response = await ApiService.instance.get(_basePath);
       
       print('Brokers API response status: ${response.statusCode}');
       
@@ -32,11 +31,10 @@ class BrokerService {
   /// Add a new broker
   static Future<Broker> addBroker(Broker broker) async {
     try {
-      final url = '${AppConstants.baseUrl}$_basePath';
-      print('Adding broker to: $url');
+      print('Adding broker to: ${AppConstants.baseUrl}$_basePath');
       
       final response = await ApiService.instance.post(
-        url,
+        _basePath,
         body: broker.toJson(),
       );
       
@@ -56,11 +54,11 @@ class BrokerService {
   /// Update an existing broker
   static Future<Broker> updateBroker(int brokerId, Broker broker) async {
     try {
-      final url = '${AppConstants.baseUrl}$_basePath/$brokerId';
-      print('Updating broker at: $url');
+      print('Updating broker at: ${AppConstants.baseUrl}$_basePath/$brokerId');
+      print('Broker data being sent: ${broker.toJson()}');
       
       final response = await ApiService.instance.put(
-        url,
+        '$_basePath/$brokerId',
         body: broker.toJson(),
       );
       
@@ -80,10 +78,9 @@ class BrokerService {
   /// Delete a broker
   static Future<void> deleteBroker(int brokerId) async {
     try {
-      final url = '${AppConstants.baseUrl}$_basePath/$brokerId';
-      print('Deleting broker at: $url');
+      print('Deleting broker at: ${AppConstants.baseUrl}$_basePath/$brokerId');
       
-      final response = await ApiService.instance.delete(url);
+      final response = await ApiService.instance.delete('$_basePath/$brokerId');
       
       print('Delete broker API response status: ${response.statusCode}');
       
