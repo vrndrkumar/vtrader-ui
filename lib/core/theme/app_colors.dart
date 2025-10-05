@@ -65,6 +65,14 @@ class AppColors {
   // Additional colors
   static const Color info = Color(0xFF2196F3);
   static const Color neutral = Color(0xFF9E9E9E);
+  
+  // Alias for compatibility
+  static const Color surface = lightSurface;
+  static const Color surfaceVariant = lightSurfaceVariant;
+  static const Color outline = lightOutline;
+  static const Color onSurfaceVariant = lightOnSurfaceVariant;
+  static const Color onPrimaryContainer = Color(0xFF1E3A8A); // Blue-800
+  static const Color onErrorContainer = Color(0xFF7F1D1D); // Red-900
 
   // Utility Colors
   static const Color transparent = Colors.transparent;

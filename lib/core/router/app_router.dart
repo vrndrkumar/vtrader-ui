@@ -10,8 +10,8 @@ import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/trade/presentation/pages/trade_journal_page.dart';
 import '../../features/trade/presentation/pages/trade_page.dart';
 import '../../features/trade/presentation/pages/add_trade_page.dart';
-import '../../features/broker/presentation/pages/brokers_page.dart';
-import '../../features/broker/presentation/pages/add_broker_page.dart';
+import '../../features/broker/presentation/pages/broker_management_page.dart';
+import '../../features/broker/presentation/pages/broker_integration_wizard.dart';
 import '../widgets/main_layout.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 
@@ -124,20 +124,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/brokers',
             name: 'brokers',
-            builder: (context, state) => const BrokersPage(),
+            builder: (context, state) => const BrokerManagementPage(),
             routes: [
               GoRoute(
                 path: 'add',
                 name: 'addBroker',
-                builder: (context, state) => const AddBrokerPage(),
-              ),
-              GoRoute(
-                path: ':brokerId/edit',
-                name: 'editBroker',
-                builder: (context, state) {
-                  final brokerId = state.pathParameters['brokerId']!;
-                  return AddBrokerPage(brokerId: brokerId);
-                },
+                builder: (context, state) => const BrokerIntegrationWizard(),
               ),
             ],
           ),

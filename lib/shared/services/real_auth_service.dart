@@ -128,7 +128,7 @@ class RealAuthService extends AuthService {
 
       // Initialize broker data after successful signin
       try {
-        await BrokerService.instance.initializeBrokerData();
+        // Broker initialization will be handled separately
       } catch (e) {
         print('Failed to initialize broker data after signin: $e');
         // Don't fail signin if broker data fetch fails

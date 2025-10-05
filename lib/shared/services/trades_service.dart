@@ -141,7 +141,7 @@ class TradesService {
 
   /// Get available broker names for filtering
   static Future<List<String>> getBrokerNames() async {
-    return await BrokerService.instance.getBrokerNames();
+    return await BrokerService.getAvailableBrokerNames();
   }
 
   /// Get available tags for management

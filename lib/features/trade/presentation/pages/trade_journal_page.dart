@@ -83,7 +83,7 @@ class _TradeJournalPageState extends ConsumerState<TradeJournalPage> {
   Future<void> _loadBrokerData() async {
     try {
       // Load broker data from local storage (populated during login)
-      final brokerNames = BrokerService.instance.getBrokerNamesSync();
+      final brokerNames = await BrokerService.getAvailableBrokerNames();
       setState(() {
         _availableBrokers = brokerNames;
         // Set default selection to "All Brokers" if available
