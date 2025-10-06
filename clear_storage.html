@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear VTrader Storage</title>
+</head>
+<body>
+    <h1>Clear VTrader Storage</h1>
+    <button onclick="clearStorage()">Clear All Storage</button>
+    <div id="result"></div>
+    
+    <script>
+        function clearStorage() {
+            try {
+                // Clear localStorage
+                localStorage.clear();
+                console.log('LocalStorage cleared');
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                console.log('SessionStorage cleared');
+                
+                // Clear cookies for localhost:3000
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                console.log('Cookies cleared');
+                
+                document.getElementById('result').innerHTML = '<p style="color: green;">✅ All storage cleared successfully!</p><p>Now go to <a href="http://localhost:3000">http://localhost:3000</a> and try logging in.</p>';
+            } catch (e) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">❌ Error clearing storage: ' + e.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

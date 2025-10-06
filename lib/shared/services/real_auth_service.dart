@@ -52,12 +52,16 @@ class RealAuthService extends AuthService {
   /// Restore session from storage
   Future<void> _restoreSession() async {
     try {
+      print('Attempting to restore session from storage...');
       final userData = StorageService.getString(AppConstants.userDataKey);
       final token = StorageService.getString(AppConstants.authTokenKey);
       final preferencesData = StorageService.getString(AppConstants.userPreferencesKey);
       final brokerData = StorageService.getString(AppConstants.brokerPreferencesKey);
       
+      print('Storage check - userData: ${userData != null ? "exists" : "null"}, token: ${token != null ? "exists" : "null"}');
+      
       if (userData != null && token != null) {
+        print('Restoring user session...');
         final userJson = jsonDecode(userData);
         _currentUser = UserModel.fromJson(userJson);
         
@@ -73,6 +77,10 @@ class RealAuthService extends AuthService {
           final brokerJson = jsonDecode(brokerData);
           _defaultBroker = BrokerPreferences.fromJson(brokerJson);
         }
+        
+        print('Session restored successfully. User: ${_currentUser?.email}, isAuthenticated: $isAuthenticated');
+      } else {
+        print('No valid session found in storage. User will need to login.');
       }
     } catch (e) {
       print('Failed to restore session: $e');
@@ -86,10 +94,16 @@ class RealAuthService extends AuthService {
     required String password,
   }) async {
     try {
+      print('=== SIGNIN METHOD CALLED ===');
+      print('Email: $email, Password: ${password.length} chars');
+      
       // Check if this is a demo user
       if (email == 'demo@vtrader.in') {
+        print('Demo user detected');
         return await _handleDemoLogin(email, password);
       }
+      
+      print('Real user login - making API call...');
 
       // Make API call to real backend
       final response = await ApiService.instance.post<Map<String, dynamic>>(
@@ -124,10 +138,27 @@ class RealAuthService extends AuthService {
       }
       
       // Convert API user to UserModel
-      final user = _convertApiUserToUserModel(loginData.user);
+      print('Converting API user to UserModel...');
+      UserModel user;
+      try {
+        user = _convertApiUserToUserModel(loginData.user);
+        print('UserModel created successfully: ${user.email}');
+      } catch (e) {
+        print('Error converting API user to UserModel: $e');
+        return AuthResult.failure('Failed to process user data: $e');
+      }
       
       // Save session data
-      await _saveSession(user, loginData);
+      print('About to save session...');
+      try {
+        await _saveSession(user, loginData);
+        print('Session saved successfully');
+      } catch (e) {
+        print('Error saving session: $e');
+        return AuthResult.failure('Failed to save session: $e');
+      }
+      
+      print('Login completed. Final auth state - isAuthenticated: $isAuthenticated, user: ${_currentUser?.email}');
       
       // Fetch master data after successful signin
       try {

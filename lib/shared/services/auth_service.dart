@@ -26,7 +26,16 @@ abstract class AuthService {
 
   /// Initialize the auth service
   static Future<void> init() async {
-    await instance._init();
+    try {
+      print('AuthService.init() called');
+      final authInstance = instance;
+      print('AuthService instance created: ${authInstance.runtimeType}');
+      await authInstance._init();
+      print('AuthService._init() completed successfully');
+    } catch (e) {
+      print('AuthService.init() error: $e');
+      rethrow;
+    }
   }
 
   /// Internal initialization method

@@ -30,19 +30,27 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isHomeRoute = state.matchedLocation == '/';
       final isLoginRoute = state.matchedLocation == '/login';
       final isRegisterRoute = state.matchedLocation == '/register';
+      final isSignInRoute = state.matchedLocation == '/auth/sign-in';
+      final isSignUpRoute = state.matchedLocation == '/auth/sign-up';
+      final isForgotPasswordRoute = state.matchedLocation == '/auth/forgot-password';
 
       print('Router redirect - isAuthenticated: $isAuthenticated, location: ${state.matchedLocation}');
 
-      // Redirect to sign-in if not authenticated and trying to access protected routes
-      if (!isAuthenticated && !isAuthRoute && !isHomeRoute && !isLoginRoute && !isRegisterRoute) {
-        print('Redirecting to /auth/sign-in (not authenticated)');
-        return '/auth/sign-in';
+      // Allow access to auth routes and home page regardless of authentication
+      if (isAuthRoute || isHomeRoute || isLoginRoute || isRegisterRoute) {
+        // If authenticated and on auth/home routes, redirect to dashboard
+        if (isAuthenticated) {
+          print('Redirecting to /dashboard (authenticated user on auth/home route)');
+          return '/dashboard';
+        }
+        // If not authenticated, allow access to these routes
+        return null;
       }
 
-      // Redirect to dashboard if authenticated and on home/auth route
-      if (isAuthenticated && (isHomeRoute || isAuthRoute || isLoginRoute || isRegisterRoute)) {
-        print('Redirecting to /dashboard (authenticated)');
-        return '/dashboard';
+      // For all other routes, require authentication
+      if (!isAuthenticated) {
+        print('Redirecting to /auth/sign-in (not authenticated, accessing protected route)');
+        return '/auth/sign-in';
       }
 
       return null;

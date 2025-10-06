@@ -15,22 +15,31 @@ void main() async {
   
   // Create provider container
   final container = ProviderContainer();
-  
-  // Temporarily disable problematic initialization
+
+  // Initialize services
   try {
     // Initialize Hive for local storage
     await Hive.initFlutter();
+    print('Hive initialized successfully');
     
     // Initialize storage service
     await StorageService.init();
+    print('Storage service initialized successfully');
     
     // Initialize auth service
-    await AuthService.init();
+    try {
+      await AuthService.init();
+      print('Auth service initialized successfully');
+    } catch (e) {
+      print('Auth service initialization failed: $e');
+      // Continue without auth service initialization
+    }
     
     // Set provider container for auth service
     RealAuthService.setProviderContainer(container);
   } catch (e) {
     print('Initialization error: $e');
+    print('Stack trace: ${StackTrace.current}');
     // Continue with app startup even if initialization fails
   }
   
