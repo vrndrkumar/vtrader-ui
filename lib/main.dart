@@ -26,6 +26,11 @@ void main() async {
     await StorageService.init();
     print('Storage service initialized successfully');
     
+    // CRITICAL: Set provider container BEFORE initializing auth service
+    // This ensures auth state changes can be propagated during initialization
+    RealAuthService.setProviderContainer(container);
+    print('Provider container set for auth service');
+    
     // Initialize auth service
     try {
       await AuthService.init();
@@ -34,9 +39,6 @@ void main() async {
       print('Auth service initialization failed: $e');
       // Continue without auth service initialization
     }
-    
-    // Set provider container for auth service
-    RealAuthService.setProviderContainer(container);
   } catch (e) {
     print('Initialization error: $e');
     print('Stack trace: ${StackTrace.current}');

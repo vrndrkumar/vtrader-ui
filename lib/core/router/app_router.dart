@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../shared/services/auth_service.dart';
 import '../../shared/providers/auth_provider.dart';
+import '../../shared/services/storage_service.dart';
+import '../../core/constants/app_constants.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/auth/presentation/pages/sign_up_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -25,28 +27,48 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      final isAuthenticated = authState.isAuthenticated;
+      // Use BOTH provider state and live service state to avoid race conditions
+      final service = AuthService.instance;
+      final serviceAuthenticated = service.isAuthenticated;
+      // Also fall back to presence of stored token to avoid timing issues
+      final storedToken = StorageService.getString(AppConstants.authTokenKey);
+      final tokenAuthenticated = storedToken != null && storedToken.isNotEmpty;
+      final isAuthenticated = authState.isAuthenticated || serviceAuthenticated || tokenAuthenticated;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isHomeRoute = state.matchedLocation == '/';
       final isLoginRoute = state.matchedLocation == '/login';
       final isRegisterRoute = state.matchedLocation == '/register';
 
-      print('Router redirect - isAuthenticated: $isAuthenticated, location: ${state.matchedLocation}');
+      print('Router redirect - isAuthenticated: $isAuthenticated (provider: ${authState.isAuthenticated}, service: $serviceAuthenticated, token: $tokenAuthenticated), location: ${state.matchedLocation}');
+      print('Router auth details -> service: ${service.runtimeType}, user: ${service.currentUser?.email}');
 
-      // Allow access to auth routes and home page regardless of authentication
+      // CRITICAL: If user has a valid token, ALWAYS allow access to protected routes
+      // This prevents redirect loops when auth state updates are delayed
+      if (tokenAuthenticated) {
+        // If on auth routes with valid token, redirect to dashboard
+        if (isAuthRoute || isHomeRoute || isLoginRoute || isRegisterRoute) {
+          print('Has valid token, redirecting from auth page to /dashboard');
+          return '/dashboard';
+        }
+        // If on any other route with valid token, allow access
+        print('Has valid token, allowing access to ${state.matchedLocation}');
+        return null;
+      }
+
+      // Allow access to auth routes and home page when not authenticated
       if (isAuthRoute || isHomeRoute || isLoginRoute || isRegisterRoute) {
         // If authenticated and on auth/home routes, redirect to dashboard
         if (isAuthenticated) {
-          print('Redirecting to /dashboard (authenticated user on auth/home route)');
+          print('Authenticated, redirecting from auth page to /dashboard');
           return '/dashboard';
         }
         // If not authenticated, allow access to these routes
         return null;
       }
 
-      // For all other routes, require authentication
-      if (!isAuthenticated) {
-        print('Redirecting to /auth/sign-in (not authenticated, accessing protected route)');
+      // For all other routes without token, require authentication
+      if (!isAuthenticated && !tokenAuthenticated) {
+        print('Not authenticated and no token, redirecting to /auth/sign-in');
         return '/auth/sign-in';
       }
 

@@ -127,14 +127,15 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryLight],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          ),
         ),
       ),
       child: Row(
@@ -142,12 +143,12 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.account_balance,
-              color: Colors.white,
+              color: AppColors.primary,
               size: 24,
             ),
           ),
@@ -160,13 +161,13 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
                   'Edit ${widget.broker.brokerName}',
                   style: AppTypography.headlineSmall.copyWith(
                     fontWeight: AppTypography.bold,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   'Update broker configuration and preferences',
                   style: AppTypography.bodyMedium.copyWith(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -174,9 +175,9 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
           ),
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
             style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),

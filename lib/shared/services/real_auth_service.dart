@@ -271,6 +271,10 @@ class RealAuthService extends AuthService {
     }
     
     print('Session saved successfully. isAuthenticated: $isAuthenticated');
+    // Notify listeners (router/auth widgets) that auth state changed
+    print('About to call _notifyAuthStateChange()...');
+    _notifyAuthStateChange();
+    print('_notifyAuthStateChange() call completed');
   }
 
   /// Apply theme from user preferences
@@ -505,13 +509,24 @@ class RealAuthService extends AuthService {
   
   /// Notify auth state provider of changes
   void _notifyAuthStateChange() {
+    print('_notifyAuthStateChange called. _providerContainer: ${_providerContainer != null}');
     if (_providerContainer != null) {
       try {
-        // Notify auth state provider
-        _providerContainer!.read(authStateProvider.notifier).reload();
+        // Notify auth state provider with current user
+        print('Notifying authStateProvider with user: ${_currentUser?.email}');
+        if (_currentUser != null) {
+          _providerContainer!.read(authStateProvider.notifier).signIn(_currentUser!);
+          print('authStateProvider.signIn() called successfully');
+        } else {
+          _providerContainer!.read(authStateProvider.notifier).signOut();
+          print('authStateProvider.signOut() called successfully');
+        }
       } catch (e) {
         print('Error notifying auth state: $e');
+        print('Stack trace: ${StackTrace.current}');
       }
+    } else {
+      print('WARNING: _providerContainer is null, cannot notify auth state changes!');
     }
   }
 

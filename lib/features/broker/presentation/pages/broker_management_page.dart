@@ -22,8 +22,8 @@ class _BrokerManagementPageState extends ConsumerState<BrokerManagementPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Broker Management'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         actions: [
           IconButton(
@@ -33,6 +33,13 @@ class _BrokerManagementPageState extends ConsumerState<BrokerManagementPage> {
             },
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            height: 1,
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+          ),
+        ),
       ),
       body: Column(
         children: [

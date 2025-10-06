@@ -10,6 +10,7 @@ import '../../../../shared/widgets/app_button.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
 import '../../../../shared/services/auth_service.dart';
+import '../../../../shared/providers/auth_provider.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -307,7 +308,26 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
       if (mounted) {
         if (result.success) {
-          context.go('/dashboard');
+          print('SignIn: Login successful, updating auth state...');
+          // Update auth state provider immediately
+          ref.read(authStateProvider.notifier).reload();
+          print('SignIn: Auth state updated');
+          
+          // Force immediate navigation by pushing and removing all previous routes
+          // This bypasses any caching or redirect issues
+          print('SignIn: Force navigating to dashboard...');
+          if (mounted) {
+            // Use pushReplacement to completely replace the current route
+            context.go('/dashboard');
+            
+            // Also trigger a refresh of the router
+            Future.delayed(const Duration(milliseconds: 50), () {
+              if (mounted) {
+                // Force router to re-evaluate by going to dashboard again
+                context.go('/dashboard');
+              }
+            });
+          }
         } else {
           setState(() {
             _errorMessage = result.message ?? 'Sign in failed';
@@ -315,6 +335,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         }
       }
     } catch (e) {
+      print('SignIn: Error during sign in: $e');
       if (mounted) {
         setState(() {
           _errorMessage = 'An unexpected error occurred. Please try again.';
