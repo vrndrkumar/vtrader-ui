@@ -39,7 +39,7 @@ class RealAuthService extends AuthService {
   }
 
   @override
-  Future<void> _init() async {
+  Future<void> initService() async {
     try {
       // Try to restore session from storage
       await _restoreSession();
@@ -206,6 +206,7 @@ class RealAuthService extends AuthService {
 
   /// Save session data
   Future<void> _saveSession(UserModel user, LoginResponse? loginData) async {
+    print('Saving session for user: ${user.email}');
     _currentUser = user;
     
     // Save user data
@@ -238,8 +239,7 @@ class RealAuthService extends AuthService {
       await StorageService.setString(AppConstants.authTokenKey, 'demo_token');
     }
     
-    // Notify auth state provider
-    _notifyAuthStateChange();
+    print('Session saved successfully. isAuthenticated: $isAuthenticated');
   }
 
   /// Apply theme from user preferences
