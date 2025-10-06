@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../models/api_models.dart';
 import 'api_service.dart';
@@ -9,12 +10,22 @@ import 'auth_service.dart';
 import 'broker_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../main.dart';
+import '../providers/auth_provider.dart';
+import '../../features/broker/presentation/providers/broker_providers.dart';
 
 /// Real API authentication service implementation
 class RealAuthService extends AuthService {
   UserModel? _currentUser;
   UserPreferencesResponse? _userPreferences;
   BrokerPreferences? _defaultBroker;
+  
+  // ProviderContainer reference for invalidating providers on logout
+  static ProviderContainer? _providerContainer;
+  
+  /// Set the provider container for state management
+  static void setProviderContainer(ProviderContainer container) {
+    _providerContainer = container;
+  }
   
   @override
   UserModel? get currentUser => _currentUser;
@@ -226,6 +237,9 @@ class RealAuthService extends AuthService {
       // Demo user - generate a token
       await StorageService.setString(AppConstants.authTokenKey, 'demo_token');
     }
+    
+    // Notify auth state provider
+    _notifyAuthStateChange();
   }
 
   /// Apply theme from user preferences
@@ -435,6 +449,39 @@ class RealAuthService extends AuthService {
     await StorageService.remove(AppConstants.brokerPreferencesKey);
     await StorageService.remove(AppConstants.refreshTokenKey);
     print('Session data cleared successfully');
+    
+    // Invalidate all providers to clear cached data
+    _invalidateAllProviders();
+    
+    // Notify auth state provider
+    _notifyAuthStateChange();
+  }
+  
+  /// Invalidate all user-specific providers
+  void _invalidateAllProviders() {
+    if (_providerContainer != null) {
+      print('Invalidating all providers...');
+      try {
+        // Import the provider file dynamically to avoid circular dependency
+        // The providers will be invalidated by calling invalidate on the container
+        _providerContainer!.invalidate(brokersProvider);
+        print('Successfully invalidated providers');
+      } catch (e) {
+        print('Error invalidating providers: $e');
+      }
+    }
+  }
+  
+  /// Notify auth state provider of changes
+  void _notifyAuthStateChange() {
+    if (_providerContainer != null) {
+      try {
+        // Notify auth state provider
+        _providerContainer!.read(authStateProvider.notifier).reload();
+      } catch (e) {
+        print('Error notifying auth state: $e');
+      }
+    }
   }
 
   /// Get user preferences

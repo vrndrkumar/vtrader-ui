@@ -7,10 +7,14 @@ import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'shared/services/storage_service.dart';
 import 'shared/services/auth_service.dart';
+import 'shared/services/real_auth_service.dart';
 import 'core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Create provider container
+  final container = ProviderContainer();
   
   // Temporarily disable problematic initialization
   try {
@@ -22,14 +26,18 @@ void main() async {
     
     // Initialize auth service
     await AuthService.init();
+    
+    // Set provider container for auth service
+    RealAuthService.setProviderContainer(container);
   } catch (e) {
     print('Initialization error: $e');
     // Continue with app startup even if initialization fails
   }
   
   runApp(
-    const ProviderScope(
-      child: VTraderApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const VTraderApp(),
     ),
   );
 }

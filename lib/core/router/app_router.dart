@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../shared/services/auth_service.dart';
+import '../../shared/providers/auth_provider.dart';
 import '../../features/auth/presentation/pages/sign_in_page.dart';
 import '../../features/auth/presentation/pages/sign_up_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
@@ -17,20 +19,29 @@ import '../../features/home/presentation/pages/home_page.dart';
 
 /// Router configuration provider
 final routerProvider = Provider<GoRouter>((ref) {
+  // Watch auth state to trigger router refresh on auth changes
+  final authState = ref.watch(authStateProvider);
+  
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      final isAuthenticated = AuthService.instance.isAuthenticated;
+      final isAuthenticated = authState.isAuthenticated;
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isHomeRoute = state.matchedLocation == '/';
+      final isLoginRoute = state.matchedLocation == '/login';
+      final isRegisterRoute = state.matchedLocation == '/register';
 
-      // Redirect to dashboard if authenticated and on home route
-      if (isAuthenticated && isHomeRoute) {
-        return '/dashboard';
+      print('Router redirect - isAuthenticated: $isAuthenticated, location: ${state.matchedLocation}');
+
+      // Redirect to sign-in if not authenticated and trying to access protected routes
+      if (!isAuthenticated && !isAuthRoute && !isHomeRoute && !isLoginRoute && !isRegisterRoute) {
+        print('Redirecting to /auth/sign-in (not authenticated)');
+        return '/auth/sign-in';
       }
 
-      // Redirect to dashboard if authenticated and on auth route
-      if (isAuthenticated && isAuthRoute) {
+      // Redirect to dashboard if authenticated and on home/auth route
+      if (isAuthenticated && (isHomeRoute || isAuthRoute || isLoginRoute || isRegisterRoute)) {
+        print('Redirecting to /dashboard (authenticated)');
         return '/dashboard';
       }
 

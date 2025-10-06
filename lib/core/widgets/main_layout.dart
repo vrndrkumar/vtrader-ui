@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../constants/app_constants.dart';
 import '../../shared/services/auth_service.dart';
+import '../../shared/providers/auth_provider.dart';
 import '../../shared/widgets/theme_toggle_button.dart';
 
 /// Main layout with responsive navigation
@@ -243,23 +244,28 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     child: Icon(Icons.person, size: 20),
                   ),
                   const SizedBox(width: 8),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        AuthService.instance.currentUser?.displayName ?? 'Demo User',
-                        style: AppTypography.bodySmall.copyWith(
-                          fontWeight: AppTypography.medium,
-                        ),
-                      ),
-                      Text(
-                        'View profile',
-                        style: AppTypography.caption.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final user = ref.watch(currentUserProvider);
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.displayName ?? 'Demo User',
+                            style: AppTypography.bodySmall.copyWith(
+                              fontWeight: AppTypography.medium,
+                            ),
+                          ),
+                          Text(
+                            'View profile',
+                            style: AppTypography.caption.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(width: 4),
                   Icon(
