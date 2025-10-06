@@ -7,6 +7,71 @@ import 'master_data_service.dart';
 import '../../core/constants/app_constants.dart';
 import 'real_auth_service.dart';
 
+/// Fallback auth service for when RealAuthService fails to initialize
+class _FallbackAuthService extends AuthService {
+  @override
+  Future<void> initService() async {
+    print('FallbackAuthService._init() called');
+  }
+
+  @override
+  UserModel? get currentUser => null;
+
+  @override
+  bool get isAuthenticated => false;
+
+  @override
+  Stream<UserModel?> get authStateChanges async* {
+    yield null;
+  }
+
+  @override
+  Future<AuthResult> signIn({required String email, required String password}) async {
+    print('FallbackAuthService.signIn() called - this should not happen');
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> signUp({required String email, required String password, required String firstName, required String lastName, String? contactNumber, String? theme}) async {
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> signOut() async {
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> sendPasswordReset(String email) async {
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> resetPassword({required String token, required String newPassword}) async {
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> updateProfile({String? firstName, String? lastName, String? profilePicture}) async {
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> changePassword({required String currentPassword, required String newPassword}) async {
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> deleteAccount() async {
+    return AuthResult.failure('Authentication service not available');
+  }
+
+  @override
+  Future<AuthResult> refreshToken() async {
+    return AuthResult.failure('Authentication service not available');
+  }
+}
+
 /// Authentication service abstraction
 /// This provides a clean interface for authentication operations
 /// and can be easily swapped with different implementations (Firebase, REST API, etc.)
@@ -15,8 +80,15 @@ abstract class AuthService {
   
   /// Get the current auth service instance
   static AuthService get instance {
-    _instance ??= RealAuthService();
-    return _instance!;
+    try {
+      _instance ??= RealAuthService();
+      return _instance!;
+    } catch (e) {
+      print('Error creating AuthService instance: $e');
+      // Return a fallback instance
+      _instance ??= _FallbackAuthService();
+      return _instance!;
+    }
   }
 
   /// Set a custom auth service implementation
@@ -30,16 +102,16 @@ abstract class AuthService {
       print('AuthService.init() called');
       final authInstance = instance;
       print('AuthService instance created: ${authInstance.runtimeType}');
-      await authInstance._init();
-      print('AuthService._init() completed successfully');
+      await authInstance.initService();
+      print('AuthService.initService() completed successfully');
     } catch (e) {
       print('AuthService.init() error: $e');
       rethrow;
     }
   }
 
-  /// Internal initialization method
-  Future<void> _init();
+  /// Internal initialization method (public to avoid library-private issues)
+  Future<void> initService();
 
   /// Get current authenticated user
   UserModel? get currentUser;
@@ -146,7 +218,7 @@ class MockAuthService extends AuthService {
   }
 
   @override
-  Future<void> _init() async {
+  Future<void> initService() async {
     // Temporarily disable session restoration to fix authentication
     // final userData = StorageService.getString(AppConstants.userDataKey);
     // final token = StorageService.getString(AppConstants.authTokenKey);

@@ -30,9 +30,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isHomeRoute = state.matchedLocation == '/';
       final isLoginRoute = state.matchedLocation == '/login';
       final isRegisterRoute = state.matchedLocation == '/register';
-      final isSignInRoute = state.matchedLocation == '/auth/sign-in';
-      final isSignUpRoute = state.matchedLocation == '/auth/sign-up';
-      final isForgotPasswordRoute = state.matchedLocation == '/auth/forgot-password';
 
       print('Router redirect - isAuthenticated: $isAuthenticated, location: ${state.matchedLocation}');
 
