@@ -30,9 +30,13 @@ class BrokerInfo {
 /// Broker quantity preferences
 @JsonSerializable()
 class BrokerQuantity {
+  @JsonKey(name: 'nifty', unknownEnumValue: null)
   final int nifty;
+  @JsonKey(name: 'sensex', unknownEnumValue: null)
   final int sensex;
+  @JsonKey(name: 'stocks', unknownEnumValue: null)
   final int stocks;
+  @JsonKey(name: 'banknifty', unknownEnumValue: null)
   final int banknifty;
 
   const BrokerQuantity({
@@ -42,7 +46,20 @@ class BrokerQuantity {
     required this.banknifty,
   });
 
-  factory BrokerQuantity.fromJson(Map<String, dynamic> json) => _$BrokerQuantityFromJson(json);
+  factory BrokerQuantity.fromJson(Map<String, dynamic> json) {
+    try {
+      // Handle case-insensitive keys by normalizing to lowercase
+      final normalizedJson = <String, dynamic>{};
+      json.forEach((key, value) {
+        normalizedJson[key.toLowerCase()] = value;
+      });
+      return _$BrokerQuantityFromJson(normalizedJson);
+    } catch (e) {
+      print('Error parsing BrokerQuantity: $e, JSON: $json');
+      rethrow;
+    }
+  }
+
   Map<String, dynamic> toJson() => _$BrokerQuantityToJson(this);
 }
 
