@@ -61,6 +61,7 @@ class BrokersNotifier extends StateNotifier<AsyncValue<List<Broker>>> {
     } catch (error, stackTrace) {
       print('Provider: Error updating broker: $error');
       state = AsyncValue.error(error, stackTrace);
+      rethrow; // Re-throw to let the UI handle the error
     }
   }
 
@@ -74,43 +75,100 @@ class BrokersNotifier extends StateNotifier<AsyncValue<List<Broker>>> {
       });
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
+      rethrow; // Re-throw to let the UI handle the error
     }
   }
 
   Future<void> setDefaultBroker(int brokerId) async {
     try {
-      state.whenData((brokers) async {
-        // Update all brokers to set defaultBroker to false
-        final updatedBrokers = brokers.map((broker) {
-          final updatedPreferences = BrokerPreferences(
-            quantity: broker.preferences.quantity,
-            brokerName: broker.preferences.brokerName,
-            displayName: broker.preferences.displayName,
-            defaultBroker: broker.id == brokerId,
-          );
-          return Broker(
-            id: broker.id,
-            userId: broker.userId,
-            brokerInfo: broker.brokerInfo,
-            isActive: broker.isActive,
-            brokerName: broker.brokerName,
-            preferences: updatedPreferences,
-            createdAt: broker.createdAt,
-            updatedAt: broker.updatedAt,
-          );
-        }).toList();
-
-        // Update each broker
-        for (final broker in updatedBrokers) {
-          if (broker.id != null) {
-            await BrokerService.updateBroker(broker.id!, broker);
-          }
+      print('=== SET DEFAULT BROKER START ===');
+      print('User clicked: Set broker $brokerId as default');
+      
+      // Get all brokers
+      final allBrokers = state.value ?? [];
+      print('Total brokers: ${allBrokers.length}');
+      
+      // Step 1: Find if any broker currently has default = true
+      Broker? currentDefaultBroker;
+      for (final broker in allBrokers) {
+        print('Checking Broker ${broker.id} (${broker.brokerName}): default = ${broker.preferences.defaultBroker}');
+        if (broker.preferences.defaultBroker == true) {
+          currentDefaultBroker = broker;
+          print('Found current default broker: ID ${broker.id}');
+          break;
         }
-
-        state = AsyncValue.data(updatedBrokers);
-      });
+      }
+      
+      // Step 2: If a default broker exists, disable it first
+      if (currentDefaultBroker != null && currentDefaultBroker.id != brokerId) {
+        print('Step 1: Disabling current default broker ${currentDefaultBroker.id}...');
+        
+        // Create broker object with default = false
+        final disabledBroker = Broker(
+          id: currentDefaultBroker.id,
+          userId: currentDefaultBroker.userId,
+          brokerInfo: currentDefaultBroker.brokerInfo,
+          isActive: currentDefaultBroker.isActive,
+          brokerName: currentDefaultBroker.brokerName,
+          preferences: BrokerPreferences(
+            quantity: currentDefaultBroker.preferences.quantity,
+            brokerName: currentDefaultBroker.preferences.brokerName,
+            displayName: currentDefaultBroker.preferences.displayName,
+            defaultBroker: false, // Set to FALSE
+          ),
+          createdAt: currentDefaultBroker.createdAt,
+          updatedAt: currentDefaultBroker.updatedAt,
+        );
+        
+        // Call UPDATE API for current default broker with default = false
+        print('Calling UPDATE API: PUT /broker/${currentDefaultBroker.id} with default=false');
+        await BrokerService.updateBroker(currentDefaultBroker.id!, disabledBroker);
+        print('✓ Successfully disabled broker ${currentDefaultBroker.id}');
+      } else if (currentDefaultBroker != null && currentDefaultBroker.id == brokerId) {
+        print('Broker $brokerId is already default. No action needed.');
+        return;
+      } else {
+        print('No default broker exists. Will set broker $brokerId directly.');
+      }
+      
+      // Step 3: Now set the requested broker to default = true
+      print('Step 2: Setting broker $brokerId as default...');
+      
+      // Find the target broker
+      final targetBroker = allBrokers.firstWhere((b) => b.id == brokerId);
+      
+      // Create broker object with default = true
+      final enabledBroker = Broker(
+        id: targetBroker.id,
+        userId: targetBroker.userId,
+        brokerInfo: targetBroker.brokerInfo,
+        isActive: targetBroker.isActive,
+        brokerName: targetBroker.brokerName,
+        preferences: BrokerPreferences(
+          quantity: targetBroker.preferences.quantity,
+          brokerName: targetBroker.preferences.brokerName,
+          displayName: targetBroker.preferences.displayName,
+          defaultBroker: true, // Set to TRUE
+        ),
+        createdAt: targetBroker.createdAt,
+        updatedAt: targetBroker.updatedAt,
+      );
+      
+      // Call UPDATE API for requested broker with default = true
+      print('Calling UPDATE API: PUT /broker/$brokerId with default=true');
+      await BrokerService.updateBroker(brokerId, enabledBroker);
+      print('✓ Successfully enabled broker $brokerId as default');
+      
+      // Step 4: Refresh broker list
+      print('Step 3: Refreshing broker list...');
+      await loadBrokers();
+      
+      print('=== SET DEFAULT BROKER COMPLETE ===');
+      
     } catch (error, stackTrace) {
+      print('ERROR in setDefaultBroker: $error');
       state = AsyncValue.error(error, stackTrace);
+      rethrow;
     }
   }
 }

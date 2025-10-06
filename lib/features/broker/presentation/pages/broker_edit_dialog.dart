@@ -73,239 +73,502 @@ class _BrokerEditDialogState extends State<BrokerEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 768;
+    
     return Dialog(
+      backgroundColor: Colors.transparent,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.8,
-        padding: const EdgeInsets.all(24),
+        width: isMobile ? screenWidth * 0.95 : screenWidth * 0.7,
+        height: isMobile ? screenHeight * 0.9 : screenHeight * 0.85,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
         child: Column(
           children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.edit,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Edit ${widget.broker.brokerName}',
-                    style: AppTypography.headlineSmall.copyWith(
-                      fontWeight: AppTypography.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+            _buildHeader(),
             Expanded(
               child: Form(
                 key: _formKey,
                 child: SingleChildScrollView(
+                  padding: EdgeInsets.all(isMobile ? 20 : 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildSectionTitle('Broker Information'),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _userIdController,
-                        decoration: const InputDecoration(
-                          labelText: 'User ID',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'User ID is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: const InputDecoration(
-                          labelText: 'Password',
-                          border: OutlineInputBorder(),
-                        ),
-                        obscureText: true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _vendorCodeController,
-                        decoration: const InputDecoration(
-                          labelText: 'Vendor Code',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle('API Credentials'),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _apiKeyController,
-                        decoration: const InputDecoration(
-                          labelText: 'API Key',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'API Key is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _secretKeyController,
-                        decoration: const InputDecoration(
-                          labelText: 'Secret Key (Optional)',
-                          border: OutlineInputBorder(),
-                        ),
-                        obscureText: true,
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _twoFAKeyController,
-                        decoration: const InputDecoration(
-                          labelText: '2FA Key',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _imeiController,
-                        decoration: const InputDecoration(
-                          labelText: 'IMEI',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle('Trading Preferences'),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _niftyController,
-                              decoration: const InputDecoration(
-                                labelText: 'NIFTY Quantity',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _sensexController,
-                              decoration: const InputDecoration(
-                                labelText: 'SENSEX Quantity',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _stocksController,
-                              decoration: const InputDecoration(
-                                labelText: 'Stocks Quantity',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _bankniftyController,
-                              decoration: const InputDecoration(
-                                labelText: 'BANKNIFTY Quantity',
-                                border: OutlineInputBorder(),
-                              ),
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      _buildSectionTitle('Settings'),
-                      const SizedBox(height: 16),
-                      SwitchListTile(
-                        title: const Text('Active'),
-                        subtitle: const Text('Enable this broker for trading'),
-                        value: _isActive,
-                        onChanged: (value) {
-                          setState(() {
-                            _isActive = value;
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      SwitchListTile(
-                        title: const Text('Default Broker'),
-                        subtitle: const Text('Set as default broker'),
-                        value: _isDefault,
-                        onChanged: (value) {
-                          setState(() {
-                            _isDefault = value;
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                      ),
+                      _buildAccountSection(),
+                      const SizedBox(height: 32),
+                      _buildCredentialsSection(),
+                      const SizedBox(height: 32),
+                      _buildPreferencesSection(isMobile),
+                      const SizedBox(height: 32),
+                      _buildSettingsSection(),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _saveBroker,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Save Changes'),
-                  ),
-                ),
-              ],
-            ),
+            _buildFooter(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: AppTypography.titleMedium.copyWith(
-        fontWeight: AppTypography.semiBold,
-        color: AppColors.primary,
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primary, AppColors.primaryLight],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.account_balance,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Edit ${widget.broker.brokerName}',
+                  style: AppTypography.headlineSmall.copyWith(
+                    fontWeight: AppTypography.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Update broker configuration and preferences',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close, color: Colors.white),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAccountSection() {
+    return _buildSection(
+      title: 'Account Details',
+      icon: Icons.person,
+      children: [
+        _buildModernTextField(
+          controller: _userIdController,
+          label: 'User ID',
+          icon: Icons.badge,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'User ID is required';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildModernTextField(
+          controller: _passwordController,
+          label: 'Password',
+          icon: Icons.lock,
+          obscureText: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Password is required';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildModernTextField(
+          controller: _vendorCodeController,
+          label: 'Vendor Code',
+          icon: Icons.code,
+          hintText: 'Optional vendor code',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCredentialsSection() {
+    return _buildSection(
+      title: 'API Credentials',
+      icon: Icons.security,
+      children: [
+        _buildModernTextField(
+          controller: _apiKeyController,
+          label: 'API Key',
+          icon: Icons.vpn_key,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'API Key is required';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+        _buildModernTextField(
+          controller: _secretKeyController,
+          label: 'Secret Key',
+          icon: Icons.key,
+          obscureText: true,
+          hintText: 'Optional secret key',
+        ),
+        const SizedBox(height: 16),
+        _buildModernTextField(
+          controller: _twoFAKeyController,
+          label: '2FA Key',
+          icon: Icons.security,
+          hintText: 'Two-factor authentication key',
+        ),
+        const SizedBox(height: 16),
+        _buildModernTextField(
+          controller: _imeiController,
+          label: 'IMEI',
+          icon: Icons.phone_android,
+          hintText: 'Device IMEI number',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPreferencesSection(bool isMobile) {
+    return _buildSection(
+      title: 'Trading Preferences',
+      icon: Icons.trending_up,
+      children: [
+        if (isMobile) ...[
+          _buildModernTextField(
+            controller: _niftyController,
+            label: 'NIFTY Quantity',
+            icon: Icons.show_chart,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          _buildModernTextField(
+            controller: _sensexController,
+            label: 'SENSEX Quantity',
+            icon: Icons.show_chart,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          _buildModernTextField(
+            controller: _stocksController,
+            label: 'Stocks Quantity',
+            icon: Icons.show_chart,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          _buildModernTextField(
+            controller: _bankniftyController,
+            label: 'BANKNIFTY Quantity',
+            icon: Icons.show_chart,
+            keyboardType: TextInputType.number,
+          ),
+        ] else ...[
+          Row(
+            children: [
+              Expanded(
+                child: _buildModernTextField(
+                  controller: _niftyController,
+                  label: 'NIFTY Quantity',
+                  icon: Icons.show_chart,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildModernTextField(
+                  controller: _sensexController,
+                  label: 'SENSEX Quantity',
+                  icon: Icons.show_chart,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildModernTextField(
+                  controller: _stocksController,
+                  label: 'Stocks Quantity',
+                  icon: Icons.show_chart,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildModernTextField(
+                  controller: _bankniftyController,
+                  label: 'BANKNIFTY Quantity',
+                  icon: Icons.show_chart,
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSettingsSection() {
+    return _buildSection(
+      title: 'Settings',
+      icon: Icons.settings,
+      children: [
+        _buildModernSwitchTile(
+          title: 'Active',
+          subtitle: 'Enable this broker for trading',
+          value: _isActive,
+          icon: Icons.power_settings_new,
+          onChanged: (value) => setState(() => _isActive = value),
+        ),
+        const SizedBox(height: 16),
+        _buildModernSwitchTile(
+          title: 'Default Broker',
+          subtitle: 'Set as default broker',
+          value: _isDefault,
+          icon: Icons.star,
+          onChanged: (value) => setState(() => _isDefault = value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSection({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: AppTypography.semiBold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hintText,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: AppTypography.bodyMedium,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+        prefixIcon: Icon(icon, color: AppColors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+
+  Widget _buildModernSwitchTile({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required IconData icon,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.titleSmall.copyWith(
+                    fontWeight: AppTypography.medium,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: AppColors.primary,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              ),
+              child: const Text('Cancel'),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _saveBroker,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+              child: const Text('Save Changes'),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -157,6 +157,9 @@ class _BrokerManagementPageState extends ConsumerState<BrokerManagementPage> {
   }
 
   Widget _buildBrokerCard(Broker broker) {
+    // Debug logging
+    print('Building broker card: ID=${broker.id}, Name=${broker.brokerName}, Default=${broker.preferences.defaultBroker}');
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -415,16 +418,24 @@ class _BrokerManagementPageState extends ConsumerState<BrokerManagementPage> {
   }
 
   void _handleBrokerAction(String action, Broker broker) async {
+    print('=== _handleBrokerAction CALLED ===');
+    print('Action: $action, Broker: ${broker.brokerName} (ID: ${broker.id})');
+    
     switch (action) {
       case 'edit':
+        print('Calling _editBroker...');
         await _editBroker(broker);
         break;
       case 'set_default':
+        print('Calling _setDefaultBroker...');
         await _setDefaultBroker(broker);
         break;
       case 'delete':
+        print('Calling _deleteBroker...');
         await _deleteBroker(broker);
         break;
+      default:
+        print('Unknown action: $action');
     }
   }
 
@@ -459,9 +470,13 @@ class _BrokerManagementPageState extends ConsumerState<BrokerManagementPage> {
   }
 
   Future<void> _setDefaultBroker(Broker broker) async {
+    print('=== _setDefaultBroker UI METHOD CALLED ===');
+    print('Broker ID: ${broker.id}, Name: ${broker.brokerName}');
+    
     if (broker.id == null) return;
 
     try {
+      print('Calling setDefaultBroker provider method...');
       await ref.read(brokersProvider.notifier).setDefaultBroker(broker.id!);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

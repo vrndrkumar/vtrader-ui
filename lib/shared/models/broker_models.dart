@@ -52,6 +52,7 @@ class BrokerPreferences {
   final BrokerQuantity quantity;
   final String brokerName;
   final String displayName;
+  @JsonKey(name: 'default')
   final bool defaultBroker;
 
   const BrokerPreferences({

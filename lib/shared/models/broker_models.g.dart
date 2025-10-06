@@ -49,7 +49,7 @@ BrokerPreferences _$BrokerPreferencesFromJson(Map<String, dynamic> json) =>
           BrokerQuantity.fromJson(json['quantity'] as Map<String, dynamic>),
       brokerName: json['brokerName'] as String,
       displayName: json['displayName'] as String,
-      defaultBroker: json['defaultBroker'] as bool,
+      defaultBroker: json['default'] as bool,
     );
 
 Map<String, dynamic> _$BrokerPreferencesToJson(BrokerPreferences instance) =>
@@ -57,7 +57,7 @@ Map<String, dynamic> _$BrokerPreferencesToJson(BrokerPreferences instance) =>
       'quantity': instance.quantity,
       'brokerName': instance.brokerName,
       'displayName': instance.displayName,
-      'defaultBroker': instance.defaultBroker,
+      'default': instance.defaultBroker,
     };
 
 Broker _$BrokerFromJson(Map<String, dynamic> json) => Broker(
