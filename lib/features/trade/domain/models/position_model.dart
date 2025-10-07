@@ -6,30 +6,38 @@ part 'position_model.g.dart';
 class PositionModel {
   final String id;
   final String symbol;
-  final String instrument;
-  final PositionType type;
   final int quantity;
   final double avgPrice;
   final double ltp;
   final double pnl;
   final double pnlPercent;
+  final bool isLong;
+  final String instrument;
   final DateTime createdAt;
   final DateTime? exitedAt;
-  final PositionStatus status;
 
-  const PositionModel({
+  // New fields for additional display data
+  final double dayBuyAvgPrice;
+  final double daySellAvgPrice;
+  final double realisedPnl;
+  final double unrealisedMtm;
+
+  PositionModel({
     required this.id,
     required this.symbol,
-    required this.instrument,
-    required this.type,
     required this.quantity,
     required this.avgPrice,
     required this.ltp,
     required this.pnl,
     required this.pnlPercent,
+    required this.isLong,
+    required this.instrument,
     required this.createdAt,
     this.exitedAt,
-    required this.status,
+    this.dayBuyAvgPrice = 0.0,
+    this.daySellAvgPrice = 0.0,
+    this.realisedPnl = 0.0,
+    this.unrealisedMtm = 0.0,
   });
 
   factory PositionModel.fromJson(Map<String, dynamic> json) =>

@@ -88,21 +88,29 @@ class PositionService {
       // Extract net quantity to determine position type
       final netQuantity = _parseDouble(json['netQuantity'] ?? json['quantity'] ?? 0);
       final isLong = netQuantity > 0;
-      
-      // Extract prices with fallback field names
-      final avgPrice = _parseDouble(json['avgPrice'] ?? json['averagePrice'] ?? json['entryPrice'] ?? 0);
-      final ltp = _parseDouble(json['ltp'] ?? json['lastTradedPrice'] ?? json['currentPrice'] ?? 0);
       final quantity = netQuantity.abs();
-      
-      // Calculate P&L if not provided
-      double pnl = _parseDouble(json['pnl'] ?? json['profitLoss'] ?? json['unrealizedPnl'] ?? 0);
-      if (pnl == 0 && avgPrice > 0 && ltp > 0) {
+
+      // Extract prices with updated fallbacks
+      final avgPrice = _parseDouble(json['netAvgPrice'] ?? json['avgPrice'] ?? json['averagePrice'] ?? json['entryPrice'] ?? 0);
+      final ltp = _parseDouble(json['ltp'] ?? json['lastTradedPrice'] ?? json['currentPrice'] ?? 0);
+
+      // Extract PNL with typo fallbacks
+      final realisedPnl = _parseDouble(json['realiasedPNL'] ?? json['realisedPNL'] ?? json['realizedPnl'] ?? 0);
+      final unrealisedPnl = _parseDouble(json['unrealiasedMTM'] ?? json['unrealisedMTM'] ?? json['unrealizedPnl'] ?? json['unrealizedMTM'] ?? 0);
+
+      // Use appropriate PNL based on whether position is open or closed
+      double pnl = netQuantity == 0 ? realisedPnl : unrealisedPnl;
+
+      // Fallback calculation if PNL is zero
+      if (pnl == 0 && avgPrice > 0 && ltp > 0 && quantity > 0) {
         pnl = isLong 
             ? (ltp - avgPrice) * quantity
             : (avgPrice - ltp) * quantity;
       }
-      
-      final pnlPercent = avgPrice != 0 ? (pnl / (avgPrice * quantity)) * 100 : 0.0;
+
+      final pnlPercent = (avgPrice > 0 && quantity > 0) 
+          ? (pnl / (avgPrice * quantity)) * 100 
+          : 0.0;
 
       // Extract symbol with fallback field names
       final symbol = json['tradingSymbol'] ?? 
@@ -117,40 +125,47 @@ class PositionService {
                         json['product'] ?? 
                         'EQ';
 
+      // New fields
+      final dayBuyAvgPrice = _parseDouble(json['dayBuyAvgPrice'] ?? 0);
+      final daySellAvgPrice = _parseDouble(json['daySellAvgPrice'] ?? 0);
+
       // Parse dates
       final createdAt = _parseDateTime(json['createdAt'] ?? json['entryTime'] ?? json['timestamp']);
       final exitedAt = _parseDateTime(json['exitedAt'] ?? json['exitTime']);
 
-      return PositionModel(
+      final position = PositionModel(
         id: json['id']?.toString() ?? json['positionId']?.toString() ?? '',
         symbol: symbol,
-        instrument: instrument,
-        type: isLong ? PositionType.long : PositionType.short,
         quantity: quantity.toInt(),
         avgPrice: avgPrice,
         ltp: ltp,
         pnl: pnl,
         pnlPercent: pnlPercent,
+        isLong: isLong,
+        instrument: instrument,
         createdAt: createdAt,
         exitedAt: exitedAt,
-        status: _parsePositionStatus(json['status'], netQuantity.toInt()),
+        dayBuyAvgPrice: dayBuyAvgPrice,
+        daySellAvgPrice: daySellAvgPrice,
+        realisedPnl: realisedPnl,
+        unrealisedMtm: unrealisedPnl,
       );
+      
+      print('Parsed position: $symbol - dayBuy: $dayBuyAvgPrice, daySell: $daySellAvgPrice, realised: $realisedPnl, unrealised: $unrealisedPnl');
+      return position;
     } catch (e) {
-      print('Error parsing position: $e');
-      print('JSON data: $json');
-      // Return a default position to prevent app crash
+      print('Error parsing position: $e - JSON: $json');
       return PositionModel(
-        id: 'error_${DateTime.now().millisecondsSinceEpoch}',
-        symbol: 'ERROR',
-        instrument: 'EQ',
-        type: PositionType.long,
+        id: '',
+        symbol: json['tradingSymbol'] ?? 'UNKNOWN',
         quantity: 0,
-        avgPrice: 0.0,
-        ltp: 0.0,
-        pnl: 0.0,
-        pnlPercent: 0.0,
+        avgPrice: 0,
+        ltp: 0,
+        pnl: 0,
+        pnlPercent: 0,
+        isLong: true,
+        instrument: 'EQ',
         createdAt: DateTime.now(),
-        status: PositionStatus.open,
       );
     }
   }
@@ -202,46 +217,43 @@ class PositionService {
         id: '1',
         symbol: 'NIFTY',
         instrument: 'INDEX',
-        type: PositionType.long,
+        isLong: true,
         quantity: 50,
         avgPrice: 19500.0,
         ltp: 19650.0,
         pnl: 7500.0,
         pnlPercent: 0.77,
         createdAt: now.subtract(const Duration(hours: 2)),
-        status: PositionStatus.open,
       ),
       PositionModel(
         id: '2',
         symbol: 'BANKNIFTY',
         instrument: 'INDEX',
-        type: PositionType.short,
+        isLong: false,
         quantity: 25,
         avgPrice: 44500.0,
         ltp: 44300.0,
         pnl: 5000.0,
         pnlPercent: 0.45,
         createdAt: now.subtract(const Duration(hours: 1)),
-        status: PositionStatus.open,
       ),
       PositionModel(
         id: '3',
         symbol: 'RELIANCE',
         instrument: 'EQ',
-        type: PositionType.long,
+        isLong: true,
         quantity: 10,
         avgPrice: 2450.0,
         ltp: 2420.0,
         pnl: -300.0,
         pnlPercent: -1.22,
         createdAt: now.subtract(const Duration(days: 1)),
-        status: PositionStatus.open,
       ),
       PositionModel(
         id: '4',
         symbol: 'TCS',
         instrument: 'EQ',
-        type: PositionType.long,
+        isLong: true,
         quantity: 5,
         avgPrice: 3200.0,
         ltp: 3250.0,
@@ -249,7 +261,6 @@ class PositionService {
         pnlPercent: 1.56,
         createdAt: now.subtract(const Duration(days: 2)),
         exitedAt: now.subtract(const Duration(hours: 1)),
-        status: PositionStatus.closed,
       ),
     ];
   }

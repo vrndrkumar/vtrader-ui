@@ -123,8 +123,8 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
 
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    final openPositions = _allPositions.where((p) => p.status == PositionStatus.open).length;
-    final closedPositions = _allPositions.where((p) => p.status == PositionStatus.closed).length;
+    final openPositions = _allPositions.where((p) => p.exitedAt == null).length;
+    final closedPositions = _allPositions.where((p) => p.exitedAt != null).length;
     final openOrders = _allOrders.where((o) => o.status == OrderStatus.pending || o.status == OrderStatus.open).length;
     final completedOrders = _allOrders.where((o) => o.status == OrderStatus.complete).length;
     final rejectedOrders = _allOrders.where((o) => o.status == OrderStatus.rejected).length;
@@ -248,8 +248,8 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
   }
 
   Widget _buildPositionsTab(BuildContext context) {
-    final openPositions = _allPositions.where((p) => p.status == PositionStatus.open).toList();
-    final closedPositions = _allPositions.where((p) => p.status == PositionStatus.closed).toList();
+    final openPositions = _allPositions.where((p) => p.exitedAt == null).toList();
+    final closedPositions = _allPositions.where((p) => p.exitedAt != null).toList();
 
     return Column(
       children: [
@@ -362,133 +362,176 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
       );
     }
 
-    return Column(
-      children: [
-        // Header row
-        _buildPositionsHeader(context, showActions),
-        // Positions list
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            itemCount: positions.length,
-            itemBuilder: (context, index) {
-              final position = positions[index];
-              return PositionCard(
-                position: position,
-                showActions: showActions,
-                onStopLoss: () => _showStopLossDialog(context, position),
-                onExit: () => _showExitDialog(context, position),
-              );
-            },
-          ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SizedBox(
+        width: 1400, // Fixed width to accommodate all columns
+        child: Column(
+          children: [
+            // Header row
+            _buildPositionsHeader(context, showActions),
+            // Positions list
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                itemCount: positions.length,
+                itemBuilder: (context, index) {
+                  final position = positions[index];
+                  return PositionCard(
+                    position: position,
+                    showActions: showActions,
+                    onStopLoss: () => _showStopLossDialog(context, position),
+                    onExit: () => _showExitDialog(context, position),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildPositionsHeader(BuildContext context, bool showActions) {
     final theme = Theme.of(context);
-    
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border.all(
-          color: theme.dividerColor.withOpacity(0.3),
-          width: 1,
+        border: Border(
+          bottom: BorderSide(color: theme.dividerColor.withOpacity(0.3)),
         ),
-        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          // Name column
-          Expanded(
-            flex: 3,
+          SizedBox(
+            width: 200,
             child: Text(
               'Name',
               style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
           ),
-          // Qty column
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 80,
             child: Text(
               'Qty',
               style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          // Avg column
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 80,
             child: Text(
               'Avg',
               style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          // LTP column
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 80,
             child: Text(
               'LTP',
               style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          // Stop Loss column
-          Expanded(
-            flex: 1,
-            child: showActions
-                ? Text(
-                    'Stop Loss',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                    textAlign: TextAlign.center,
-                  )
-                : const SizedBox.shrink(),
+          // New headers
+          SizedBox(
+            width: 100,
+            child: Text(
+              'Day Buy Avg',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ),
-          // P/L column
-          Expanded(
-            flex: 1,
+          SizedBox(
+            width: 100,
+            child: Text(
+              'Day Sell Avg',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: 100,
+            child: Text(
+              'Realised PNL',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(
+            width: 120,
+            child: Text(
+              'Unrealised MTM',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          if (showActions)
+            SizedBox(
+              width: 80,
+              child: Text(
+                'Stop Loss',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          SizedBox(
+            width: 80,
             child: Text(
               'P/L',
               style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          // Exit column
-          Expanded(
-            flex: 1,
-            child: showActions
-                ? Text(
-                    'Exit',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                    textAlign: TextAlign.center,
-                  )
-                : const SizedBox.shrink(),
-          ),
+          if (showActions)
+            SizedBox(
+              width: 60,
+              child: Text(
+                'Exit',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
         ],
       ),
     );
@@ -657,7 +700,7 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Set Stop Loss'),
-        content: Text('Set stop loss for ${position.symbol} ${position.type.name} position?'),
+        content: Text('Set stop loss for ${position.symbol} ${position.isLong ? "LONG" : "SHORT"} position?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
@@ -683,7 +726,7 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Exit Position'),
-        content: Text('Exit ${position.symbol} ${position.type.name} position?\n\nCurrent P&L: ₹${position.pnl.toStringAsFixed(2)}'),
+        content: Text('Exit ${position.symbol} ${position.isLong ? "LONG" : "SHORT"} position?\n\nCurrent P&L: ₹${position.pnl.toStringAsFixed(2)}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),

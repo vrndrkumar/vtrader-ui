@@ -13,7 +13,7 @@ class UserConfigService {
   // Current configuration
   String _userId = '31';
   String _brokerName = 'FINVASIA';
-  bool _useLiveData = false;
+  bool _useLiveData = true; // Changed to true to use live API data
   
   // Getters
   String get userId => _userId;
@@ -26,7 +26,7 @@ class UserConfigService {
     
     _userId = prefs.getString(_userIdKey) ?? '31';
     _brokerName = prefs.getString(_brokerNameKey) ?? 'FINVASIA';
-    _useLiveData = prefs.getBool(_useLiveDataKey) ?? false;
+    _useLiveData = prefs.getBool(_useLiveDataKey) ?? true; // Default to true for live API data
   }
   
   // Update user ID
@@ -54,7 +54,7 @@ class UserConfigService {
   Future<void> resetToDefaults() async {
     _userId = '31';
     _brokerName = 'FINVASIA';
-    _useLiveData = false;
+    _useLiveData = true;
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userIdKey);

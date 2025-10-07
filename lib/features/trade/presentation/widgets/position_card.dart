@@ -20,8 +20,8 @@ class PositionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isPnlPositive = position.pnl >= 0;
-    final isLong = position.type == PositionType.long;
-    final isOpen = position.status == PositionStatus.open;
+    final isLong = position.isLong;
+    final isOpen = position.exitedAt == null;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -44,8 +44,8 @@ class PositionCard extends StatelessWidget {
     return Row(
       children: [
         // Name column - Symbol with instrument details
-        Expanded(
-          flex: 3,
+        SizedBox(
+          width: 200,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -67,8 +67,8 @@ class PositionCard extends StatelessWidget {
           ),
         ),
         // Qty column
-        Expanded(
-          flex: 1,
+        SizedBox(
+          width: 80,
           child: Text(
             '${isLong ? '' : '-'}${position.quantity}',
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -80,8 +80,8 @@ class PositionCard extends StatelessWidget {
           ),
         ),
         // Avg column
-        Expanded(
-          flex: 1,
+        SizedBox(
+          width: 80,
           child: Text(
             position.avgPrice.toStringAsFixed(2),
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -92,8 +92,8 @@ class PositionCard extends StatelessWidget {
           ),
         ),
         // LTP column
-        Expanded(
-          flex: 1,
+        SizedBox(
+          width: 80,
           child: Text(
             position.ltp.toStringAsFixed(2),
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -103,9 +103,59 @@ class PositionCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ),
+        // New: Day Buy Avg
+        SizedBox(
+          width: 100,
+          child: Text(
+            position.dayBuyAvgPrice.toStringAsFixed(2),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // New: Day Sell Avg
+        SizedBox(
+          width: 100,
+          child: Text(
+            position.daySellAvgPrice.toStringAsFixed(2),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // New: Realised PNL
+        SizedBox(
+          width: 100,
+          child: Text(
+            position.realisedPnl.toStringAsFixed(2),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.w500,
+              color: position.realisedPnl >= 0 ? AppColors.success : AppColors.error,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        // New: Unrealised MTM
+        SizedBox(
+          width: 120,
+          child: Text(
+            position.unrealisedMtm.toStringAsFixed(2),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.w500,
+              color: position.unrealisedMtm >= 0 ? AppColors.success : AppColors.error,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
         // Stop Loss column
-        Expanded(
-          flex: 1,
+        SizedBox(
+          width: 80,
           child: showActions && isOpen
               ? Center(
                   child: GestureDetector(
@@ -127,8 +177,8 @@ class PositionCard extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
         // P/L column
-        Expanded(
-          flex: 1,
+        SizedBox(
+          width: 80,
           child: Text(
             position.pnl.toStringAsFixed(2),
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -140,8 +190,8 @@ class PositionCard extends StatelessWidget {
           ),
         ),
         // Exit column
-        Expanded(
-          flex: 1,
+        SizedBox(
+          width: 60,
           child: showActions && isOpen
               ? Center(
                   child: GestureDetector(

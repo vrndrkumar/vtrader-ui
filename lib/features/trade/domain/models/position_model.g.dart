@@ -10,46 +10,41 @@ PositionModel _$PositionModelFromJson(Map<String, dynamic> json) =>
     PositionModel(
       id: json['id'] as String,
       symbol: json['symbol'] as String,
-      instrument: json['instrument'] as String,
-      type: $enumDecode(_$PositionTypeEnumMap, json['type']),
       quantity: (json['quantity'] as num).toInt(),
       avgPrice: (json['avgPrice'] as num).toDouble(),
       ltp: (json['ltp'] as num).toDouble(),
       pnl: (json['pnl'] as num).toDouble(),
       pnlPercent: (json['pnlPercent'] as num).toDouble(),
+      isLong: json['isLong'] as bool,
+      instrument: json['instrument'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
       exitedAt: json['exitedAt'] == null
           ? null
           : DateTime.parse(json['exitedAt'] as String),
-      status: $enumDecode(_$PositionStatusEnumMap, json['status']),
+      dayBuyAvgPrice: (json['dayBuyAvgPrice'] as num?)?.toDouble() ?? 0.0,
+      daySellAvgPrice: (json['daySellAvgPrice'] as num?)?.toDouble() ?? 0.0,
+      realisedPnl: (json['realisedPnl'] as num?)?.toDouble() ?? 0.0,
+      unrealisedMtm: (json['unrealisedMtm'] as num?)?.toDouble() ?? 0.0,
     );
 
 Map<String, dynamic> _$PositionModelToJson(PositionModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'symbol': instance.symbol,
-      'instrument': instance.instrument,
-      'type': _$PositionTypeEnumMap[instance.type]!,
       'quantity': instance.quantity,
       'avgPrice': instance.avgPrice,
       'ltp': instance.ltp,
       'pnl': instance.pnl,
       'pnlPercent': instance.pnlPercent,
+      'isLong': instance.isLong,
+      'instrument': instance.instrument,
       'createdAt': instance.createdAt.toIso8601String(),
       'exitedAt': instance.exitedAt?.toIso8601String(),
-      'status': _$PositionStatusEnumMap[instance.status]!,
+      'dayBuyAvgPrice': instance.dayBuyAvgPrice,
+      'daySellAvgPrice': instance.daySellAvgPrice,
+      'realisedPnl': instance.realisedPnl,
+      'unrealisedMtm': instance.unrealisedMtm,
     };
-
-const _$PositionTypeEnumMap = {
-  PositionType.long: 'long',
-  PositionType.short: 'short',
-};
-
-const _$PositionStatusEnumMap = {
-  PositionStatus.open: 'open',
-  PositionStatus.closed: 'closed',
-  PositionStatus.partial: 'partial',
-};
 
 OrderModel _$OrderModelFromJson(Map<String, dynamic> json) => OrderModel(
       id: json['id'] as String,
