@@ -131,7 +131,7 @@ class PositionService {
 
       // Parse dates
       final createdAt = _parseDateTime(json['createdAt'] ?? json['entryTime'] ?? json['timestamp']);
-      final exitedAt = _parseDateTime(json['exitedAt'] ?? json['exitTime']);
+      final exitedAt = _parseNullableDateTime(json['exitedAt'] ?? json['exitTime']);
 
       final position = PositionModel(
         id: json['id']?.toString() ?? json['positionId']?.toString() ?? '',
@@ -189,6 +189,16 @@ class PositionService {
       return DateTime.tryParse(value) ?? DateTime.now();
     }
     return DateTime.now();
+  }
+
+  /// Helper to parse nullable DateTime (returns null if value is missing/invalid)
+  static DateTime? _parseNullableDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    return null;
   }
 
   /// Parse position status from API response

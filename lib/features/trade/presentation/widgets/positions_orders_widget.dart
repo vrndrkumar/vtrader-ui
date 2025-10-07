@@ -123,8 +123,9 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
 
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    final openPositions = _allPositions.where((p) => p.exitedAt == null).length;
-    final closedPositions = _allPositions.where((p) => p.exitedAt != null).length;
+    // Classify using live quantity: open when quantity > 0, closed when == 0
+    final openPositions = _allPositions.where((p) => p.quantity > 0).length;
+    final closedPositions = _allPositions.where((p) => p.quantity == 0).length;
     final openOrders = _allOrders.where((o) => o.status == OrderStatus.pending || o.status == OrderStatus.open).length;
     final completedOrders = _allOrders.where((o) => o.status == OrderStatus.complete).length;
     final rejectedOrders = _allOrders.where((o) => o.status == OrderStatus.rejected).length;
@@ -248,8 +249,9 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
   }
 
   Widget _buildPositionsTab(BuildContext context) {
-    final openPositions = _allPositions.where((p) => p.exitedAt == null).toList();
-    final closedPositions = _allPositions.where((p) => p.exitedAt != null).toList();
+    // Open when quantity > 0; closed when == 0
+    final openPositions = _allPositions.where((p) => p.quantity > 0).toList();
+    final closedPositions = _allPositions.where((p) => p.quantity == 0).toList();
 
     return Column(
       children: [
@@ -362,33 +364,27 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
       );
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SizedBox(
-        width: 1400, // Fixed width to accommodate all columns
-        child: Column(
-          children: [
-            // Header row
-            _buildPositionsHeader(context, showActions),
-            // Positions list
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                itemCount: positions.length,
-                itemBuilder: (context, index) {
-                  final position = positions[index];
-                  return PositionCard(
-                    position: position,
-                    showActions: showActions,
-                    onStopLoss: () => _showStopLossDialog(context, position),
-                    onExit: () => _showExitDialog(context, position),
-                  );
-                },
-              ),
-            ),
-          ],
+    return Column(
+      children: [
+        // Header row
+        _buildPositionsHeader(context, showActions),
+        // Positions list
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            itemCount: positions.length,
+            itemBuilder: (context, index) {
+              final position = positions[index];
+              return PositionCard(
+                position: position,
+                showActions: showActions,
+                onStopLoss: () => _showStopLossDialog(context, position),
+                onExit: () => _showExitDialog(context, position),
+              );
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -404,8 +400,8 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 200,
+          Expanded(
+            flex: 3,
             child: Text(
               'Name',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -414,30 +410,20 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
               ),
             ),
           ),
-          SizedBox(
-            width: 80,
-            child: Text(
-              'Qty',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+          if (showActions)
+            Expanded(
+              flex: 1,
+              child: Text(
+                'Qty',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
-          ),
-          SizedBox(
-            width: 80,
-            child: Text(
-              'Avg',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(
-            width: 80,
+          Expanded(
+            flex: 1,
             child: Text(
               'LTP',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -447,11 +433,10 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
               textAlign: TextAlign.center,
             ),
           ),
-          // New headers
-          SizedBox(
-            width: 100,
+          Expanded(
+            flex: 1,
             child: Text(
-              'Day Buy Avg',
+              'Buy Avg',
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -460,10 +445,10 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
               textAlign: TextAlign.center,
             ),
           ),
-          SizedBox(
-            width: 100,
+          Expanded(
+            flex: 1,
             child: Text(
-              'Day Sell Avg',
+              'Sell Avg',
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
@@ -472,8 +457,8 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
               textAlign: TextAlign.center,
             ),
           ),
-          SizedBox(
-            width: 100,
+          Expanded(
+            flex: 1,
             child: Text(
               'Realised PNL',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -484,21 +469,22 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
               textAlign: TextAlign.center,
             ),
           ),
-          SizedBox(
-            width: 120,
-            child: Text(
-              'Unrealised MTM',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 11,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
           if (showActions)
-            SizedBox(
-              width: 80,
+            Expanded(
+              flex: 1,
+              child: Text(
+                'Unrealised MTM',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          if (showActions)
+            Expanded(
+              flex: 1,
               child: Text(
                 'Stop Loss',
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -509,20 +495,21 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
                 textAlign: TextAlign.center,
               ),
             ),
-          SizedBox(
-            width: 80,
-            child: Text(
-              'P/L',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
           if (showActions)
-            SizedBox(
-              width: 60,
+            Expanded(
+              flex: 1,
+              child: Text(
+                'P/L',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          if (showActions)
+            Expanded(
+              flex: 1,
               child: Text(
                 'Exit',
                 style: theme.textTheme.bodySmall?.copyWith(
