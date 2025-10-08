@@ -134,26 +134,29 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
-          // Broker selector row
-          if (_userConfig.useLiveData) ...[
-            Row(
-              children: [
-                const Icon(Icons.account_balance, size: 16),
-                const SizedBox(width: 8),
-                const Text('Broker:'),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildBrokerSelector(context),
+          // Broker selector row - always show
+          Row(
+            children: [
+              Icon(Icons.account_balance, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'Broker:',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.refresh, size: 16),
-                  onPressed: _loadData,
-                  tooltip: 'Refresh data',
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildBrokerSelector(context),
+              ),
+              IconButton(
+                icon: Icon(Icons.refresh, size: 18, color: theme.colorScheme.primary),
+                onPressed: _loadData,
+                tooltip: 'Refresh positions & orders',
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -769,36 +772,74 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
   }
 
   Widget _buildBrokerSelector(BuildContext context) {
+    final theme = Theme.of(context);
     final brokerService = ref.read(brokerSelectionProvider.notifier);
     final availableBrokers = brokerService.getAvailableBrokers();
     final currentBroker = ref.watch(brokerSelectionProvider);
 
-    if (availableBrokers.isEmpty) {
-      return Text(
-        currentBroker ?? 'FINVASIA',
-        style: Theme.of(context).textTheme.bodyMedium,
+    if (availableBrokers.isEmpty || availableBrokers.length == 1) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Text(
+          currentBroker ?? 'FINVASIA',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       );
     }
 
-    return DropdownButton<String>(
-      value: currentBroker,
-      isExpanded: true,
-      underline: const SizedBox(),
-      items: availableBrokers.map((broker) {
-        return DropdownMenuItem<String>(
-          value: broker.brokerName,
-          child: Text(
-            broker.displayName,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        );
-      }).toList(),
-      onChanged: (String? newBroker) {
-        if (newBroker != null && newBroker != currentBroker) {
-          brokerService.switchBroker(newBroker);
-          _loadData(); // Reload data with new broker
-        }
-      },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.dividerColor),
+      ),
+      child: DropdownButton<String>(
+        value: currentBroker,
+        isExpanded: true,
+        underline: const SizedBox(),
+        icon: Icon(Icons.arrow_drop_down, color: theme.colorScheme.primary),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.onSurface,
+        ),
+        items: availableBrokers.map((broker) {
+          return DropdownMenuItem<String>(
+            value: broker.brokerName,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.account_balance,
+                  size: 16,
+                  color: broker.brokerName == currentBroker 
+                      ? theme.colorScheme.primary 
+                      : theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+                const SizedBox(width: 8),
+                Text(broker.displayName),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newBroker) {
+          if (newBroker != null && newBroker != currentBroker) {
+            // Schedule the state update to avoid build-during-build error
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                brokerService.switchBroker(newBroker);
+                _loadData(); // Reload data with new broker
+              }
+            });
+          }
+        },
+      ),
     );
   }
 }

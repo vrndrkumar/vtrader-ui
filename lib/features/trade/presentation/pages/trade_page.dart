@@ -249,13 +249,18 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
                 value: selectedIndex?.symbolCode ?? _selectedIndex,
                 onChanged: masterDataState.isLoading ? null : (value) {
                   if (value != null) {
-                    // Find the index model and update state
-                    final indexModel = masterDataState.indices.firstWhere(
-                      (index) => index.symbolCode == value,
-                      orElse: () => masterDataState.indices.first,
-                    );
-                    ref.read(selectedIndexProvider.notifier).state = indexModel;
-                    _onIndexChanged(value);
+                    // Schedule state update for after build to avoid LayoutBuilder error
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        // Find the index model and update state
+                        final indexModel = masterDataState.indices.firstWhere(
+                          (index) => index.symbolCode == value,
+                          orElse: () => masterDataState.indices.first,
+                        );
+                        ref.read(selectedIndexProvider.notifier).state = indexModel;
+                        _onIndexChanged(value);
+                      }
+                    });
                   }
                 },
                 hint: masterDataState.isLoading
@@ -285,32 +290,40 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
                         ),
                       )
                     : null,
-                items: masterDataState.indices.map((index) {
-                  return DropdownMenuItem<String>(
-                    value: index.symbolCode,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            index.symbolName,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
+                items: () {
+                  // Remove duplicates by using a Map keyed by symbolCode
+                  final uniqueIndices = <String, IndexModel>{};
+                  for (final index in masterDataState.indices) {
+                    uniqueIndices[index.symbolCode] = index;
+                  }
+                  
+                  return uniqueIndices.values.map((index) {
+                    return DropdownMenuItem<String>(
+                      value: index.symbolCode,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              index.symbolName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${index.exchange}',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${index.exchange}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList();
+                }(),
               ),
             ),
           ),
