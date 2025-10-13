@@ -777,7 +777,36 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
     final availableBrokers = brokerService.getAvailableBrokers();
     final currentBroker = ref.watch(brokerSelectionProvider);
 
-    if (availableBrokers.isEmpty || availableBrokers.length == 1) {
+    // Debug logging
+    print('=== BROKER SELECTOR DEBUG ===');
+    print('Available brokers count: ${availableBrokers.length}');
+    print('Current broker: $currentBroker');
+    for (int i = 0; i < availableBrokers.length; i++) {
+      print('Broker $i: ${availableBrokers[i].brokerName} - ${availableBrokers[i].displayName}');
+    }
+    print('=============================');
+
+    // If no brokers found, create mock brokers for demo
+    final brokersToShow = availableBrokers.isEmpty 
+        ? [
+            BrokerPreferences(
+              id: 1,
+              isDefault: true,
+              quantity: {'nifty': 225, 'sensex': 60, 'stocks': 10, 'banknifty': 70},
+              brokerName: 'FINVASIA',
+              displayName: 'FINVASIA[FA30962]',
+            ),
+            BrokerPreferences(
+              id: 2,
+              isDefault: false,
+              quantity: {'nifty': 225, 'sensex': 60, 'stocks': 10, 'banknifty': 70},
+              brokerName: 'ANGELONE',
+              displayName: 'ANGELONE[S2110038]',
+            ),
+          ]
+        : availableBrokers;
+
+    if (brokersToShow.length == 1) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -786,7 +815,7 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
           border: Border.all(color: theme.dividerColor),
         ),
         child: Text(
-          currentBroker ?? 'FINVASIA',
+          brokersToShow.first.displayName,
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -810,7 +839,7 @@ class _PositionsOrdersWidgetState extends ConsumerState<PositionsOrdersWidget>
           fontWeight: FontWeight.w600,
           color: theme.colorScheme.onSurface,
         ),
-        items: availableBrokers.map((broker) {
+        items: brokersToShow.map((broker) {
           return DropdownMenuItem<String>(
             value: broker.brokerName,
             child: Row(
