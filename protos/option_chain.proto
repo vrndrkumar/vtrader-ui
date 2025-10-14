@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+message OptionData {
+  string symbol = 1;
+  double ask = 2;
+  double bid = 3;
+  double ltp = 4;
+  double ltpch = 5;
+  double ltpchp = 6;
+  string optionType = 7;
+  double strikePrice = 8;
+  double oi = 9;
+  double oich = 10;
+  double oichp = 11;
+  double volume = 12;
+  double fp = 13;
+  double fpch = 14;
+  double fpchp = 15;
+}
+
+message OptionChain {
+  repeated OptionData options = 1;
+}
+

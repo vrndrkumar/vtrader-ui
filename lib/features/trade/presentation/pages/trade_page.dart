@@ -6,11 +6,14 @@ import '../widgets/option_chain_widget.dart';
 import '../widgets/chart_widget.dart';
 import '../widgets/positions_orders_widget.dart';
 import '../../data/services/mock_market_data_service.dart';
+import '../../data/services/real_option_chain_service.dart';
 import '../../domain/models/option_chain_model.dart';
 import '../../domain/models/position_model.dart';
 import '../../../../shared/services/storage_service.dart';
 import '../../../../shared/providers/master_data_provider.dart';
 import '../../../../shared/models/index_model.dart';
+import '../../../../shared/widgets/websocket_status_widget.dart';
+import '../../../../shared/widgets/floating_ws_test_button.dart';
 
 class TradePage extends ConsumerStatefulWidget {
   final String? symbol;
@@ -26,6 +29,7 @@ class TradePage extends ConsumerStatefulWidget {
 
 class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateMixin {
   final MockMarketDataService _marketDataService = MockMarketDataService();
+  late RealOptionChainService _realOptionChainService;
   
   String _selectedIndex = 'NIFTY';
   String? _selectedExpiry;
@@ -36,6 +40,7 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   
   Timer? _refreshTimer;
   bool _isLoading = true;
+  StreamSubscription<OptionChainModel?>? _optionChainSubscription;
 
   // Panel size persistence keys
   static const String _horizontalRatioKey = 'trade_page_horizontal_ratio';
@@ -48,10 +53,13 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   void initState() {
     super.initState();
     _selectedIndex = widget.symbol ?? 'NIFTY';
+    _realOptionChainService = RealOptionChainService.instance;
+    
     _loadPanelSizes();
+    _initializeWebSocket();
     _loadInitialData();
     _startAutoRefresh();
-    
+
     // Listen to master data changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeFromMasterData();
@@ -61,7 +69,9 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _optionChainSubscription?.cancel();
     _marketDataService.stopPriceUpdates();
+    _realOptionChainService.dispose();
     super.dispose();
   }
 
@@ -93,16 +103,15 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
       _marketDataService.setActiveIndex(_selectedIndex);
       _marketDataService.startPriceUpdates();
       
-      // Generate fresh data for the selected index
-      final optionChain = _marketDataService.generateOptionChain(_selectedIndex);
+      // Generate mock data for non-option chain widgets (candles, positions, orders)
       final candleData = _marketDataService.generateCandleData(_selectedIndex);
       final positions = _marketDataService.generateMockPositions();
       final orders = _marketDataService.generateMockOrders();
 
       if (mounted) {
-        print('Data loaded for $_selectedIndex: ${candleData.length} candles, ${optionChain.strikes.length} strikes');
+        print('Data loaded for $_selectedIndex: ${candleData.length} candles');
         setState(() {
-          _optionChain = optionChain;
+          // Option chain will come from WebSocket, don't use mock data
           _candleData = candleData;
           _positions = positions;
           _orders = orders;
@@ -152,6 +161,10 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   void _onIndexChanged(String newIndex) {
     if (newIndex != _selectedIndex) {
       print('Index changing from $_selectedIndex to $newIndex');
+      
+      // Unsubscribe from previous WebSocket channel
+      _realOptionChainService.unsubscribe();
+      
       setState(() {
         _selectedIndex = newIndex;
         _selectedExpiry = null; // Reset expiry when index changes
@@ -176,9 +189,12 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
     setState(() {
       _selectedExpiry = expiry;
     });
-    // Optionally reload data with new expiry
-    if (expiry != null) {
-      _loadInitialData();
+    
+    // Subscribe to WebSocket for new expiry
+    if (expiry != null && _selectedIndex.isNotEmpty) {
+      // Convert dropdown format to API format for subscription
+      final apiExpiry = _convertDropdownToApiExpiry(expiry);
+      _subscribeToOptionChain(_selectedIndex, apiExpiry);
     }
   }
 
@@ -191,22 +207,159 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         final defaultIndex = masterDataState.indices.first;
         ref.read(selectedIndexProvider.notifier).state = defaultIndex;
         _onIndexChanged(defaultIndex.symbolCode);
+        
+        // Subscribe to WebSocket with first expiry after index is set
+        final expiries = defaultIndex.formattedExpiryDates;
+        debugPrint('📅 Available expiries: $expiries');
+        if (expiries.isNotEmpty) {
+          final apiExpiry = expiries.first; // e.g., "14OCT25"
+          final dropdownExpiry = _convertApiExpiryToDropdown(apiExpiry); // e.g., "14/10/2025"
+          
+          debugPrint('📅 Setting expiry: API=$apiExpiry, Dropdown=$dropdownExpiry');
+          
+          setState(() {
+            _selectedExpiry = dropdownExpiry;
+          });
+          ref.read(selectedExpiryProvider.notifier).state = dropdownExpiry;
+          
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            debugPrint('📡 Subscribing to: ${defaultIndex.symbolCode} - $apiExpiry');
+            _subscribeToOptionChain(defaultIndex.symbolCode, apiExpiry);
+          });
+        } else {
+          debugPrint('⚠️ No expiries available for ${defaultIndex.symbolCode}');
+        }
+      } else {
+        // Subscribe to WebSocket for currently selected index/expiry
+        final expiries = selectedIndex.formattedExpiryDates;
+        debugPrint('📅 Index already selected: ${selectedIndex.symbolCode}, expiries: $expiries');
+        
+        if (expiries.isNotEmpty) {
+          // Use first expiry if none selected
+          final dropdownExpiry = _selectedExpiry ?? _convertApiExpiryToDropdown(expiries.first);
+          final apiExpiry = _convertDropdownToApiExpiry(dropdownExpiry);
+          
+          debugPrint('📅 Using expiry: Dropdown=$dropdownExpiry, API=$apiExpiry');
+          
+          if (_selectedExpiry == null) {
+            setState(() {
+              _selectedExpiry = dropdownExpiry;
+            });
+            ref.read(selectedExpiryProvider.notifier).state = dropdownExpiry;
+          }
+          
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            debugPrint('📡 Subscribing to: ${selectedIndex.symbolCode} - $apiExpiry');
+            _subscribeToOptionChain(selectedIndex.symbolCode, apiExpiry);
+          });
+        } else {
+          debugPrint('⚠️ No expiries available for ${selectedIndex.symbolCode}');
+        }
       }
     }
+  }
+  
+  /// Convert API expiry format to dropdown format
+  /// Example: "14OCT25" -> "14/10/2025"
+  String _convertApiExpiryToDropdown(String apiExpiry) {
+    try {
+      final day = apiExpiry.substring(0, 2);
+      final monthStr = apiExpiry.substring(2, 5);
+      final year = '20${apiExpiry.substring(5, 7)}';
+
+      const monthMap = {
+        'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04', 'MAY': '05', 'JUN': '06',
+        'JUL': '07', 'AUG': '08', 'SEP': '09', 'OCT': '10', 'NOV': '11', 'DEC': '12',
+      };
+
+      final month = monthMap[monthStr] ?? '01';
+      return '$day/$month/$year';
+    } catch (e) {
+      return apiExpiry;
+    }
+  }
+  
+  /// Convert dropdown expiry format to API format
+  /// Example: "14/10/2025" -> "14OCT25"
+  String _convertDropdownToApiExpiry(String dropdownExpiry) {
+    try {
+      final parts = dropdownExpiry.split('/');
+      if (parts.length == 3) {
+        final day = parts[0].padLeft(2, '0');
+        final month = int.parse(parts[1]);
+        final year = parts[2].substring(2); // Last 2 digits
+
+        const months = [
+          '', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+          'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'
+        ];
+
+        return '$day${months[month]}$year';
+      }
+      return dropdownExpiry;
+    } catch (e) {
+      return dropdownExpiry;
+    }
+  }
+
+  /// Initialize WebSocket service and listen to real-time option chain data
+  Future<void> _initializeWebSocket() async {
+    try {
+      debugPrint('🚀 TradePage: Initializing WebSocket service...');
+      
+      // Initialize the real option chain service
+      await _realOptionChainService.initialize();
+      
+      // Listen to real-time option chain updates
+      _optionChainSubscription = _realOptionChainService.optionChainStream.listen(
+        (optionChain) {
+          if (optionChain != null && mounted) {
+            debugPrint('📊 TradePage: Received option chain with ${optionChain.strikes.length} strikes');
+            setState(() {
+              _optionChain = optionChain;
+            });
+          }
+        },
+        onError: (error) {
+          debugPrint('❌ TradePage: Error in option chain stream: $error');
+        },
+      );
+      
+      debugPrint('✅ TradePage: WebSocket service initialized');
+    } catch (e) {
+      debugPrint('❌ TradePage: Failed to initialize WebSocket: $e');
+    }
+  }
+
+  /// Subscribe to option chain WebSocket for specific index and expiry
+  void _subscribeToOptionChain(String index, String expiry) {
+    debugPrint('📡 TradePage: Subscribing to $index - $expiry');
+    _realOptionChainService.subscribeToOptionChain(index, expiry);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: ValueKey('trade_page_$_selectedIndex'),
-      body: Column(
+      body: Stack(
         children: [
-          _buildTopControls(context),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _buildMainLayout(context),
+          Column(
+            children: [
+              // WebSocket test panel - ALWAYS visible
+              const WebSocketStatusWidget(),
+              
+              // Top controls (Index + Expiry dropdowns) - ALWAYS visible
+              _buildTopControls(context),
+              
+              // Main content area - show spinner ONLY for option chain data
+              Expanded(
+                child: _buildMainLayout(context),
+              ),
+            ],
           ),
+          
+          // Floating WebSocket Test Button - ALWAYS VISIBLE
+          const FloatingWSTestButton(),
         ],
       ),
     );
@@ -380,7 +533,33 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
                         optionChain: _optionChain!,
                         onRefresh: _refreshData,
                       )
-                    : const Center(child: CircularProgressIndicator()),
+                    : Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const CircularProgressIndicator(),
+                            const SizedBox(height: 16),
+                            Text('Waiting for option chain data...'),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Index: $_selectedIndex | Expiry: ${_selectedExpiry ?? "Not set"}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Check test widget at bottom-right →',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                 ChartWidget(
                   candleData: _candleData,
                   symbol: _selectedIndex,
@@ -424,7 +603,61 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
                   optionChain: _optionChain!,
                   onRefresh: _refreshData,
                 )
-              : const Center(child: CircularProgressIndicator()),
+              : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Waiting for option chain data...',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Index: $_selectedIndex',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Expiry: ${_selectedExpiry ?? "⚠️ NOT SET - Please select expiry"}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _selectedExpiry == null ? Colors.red : Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        '👉 Check test widget at bottom-right corner',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '📊 WebSocket Status Panel at top',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
           
           // Right Panel - Chart and Positions/Orders (Vertical split)
           ResizableWidget(
