@@ -12,7 +12,6 @@ import '../../domain/models/position_model.dart';
 import '../../../../shared/services/storage_service.dart';
 import '../../../../shared/providers/master_data_provider.dart';
 import '../../../../shared/models/index_model.dart';
-import '../../../../shared/widgets/websocket_status_widget.dart';
 import '../../../../shared/widgets/floating_ws_test_button.dart';
 
 class TradePage extends ConsumerStatefulWidget {
@@ -345,9 +344,6 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         children: [
           Column(
             children: [
-              // WebSocket test panel - ALWAYS visible
-              const WebSocketStatusWidget(),
-              
               // Top controls (Index + Expiry dropdowns) - ALWAYS visible
               _buildTopControls(context),
               
@@ -358,7 +354,7 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
             ],
           ),
           
-          // Floating WebSocket Test Button - ALWAYS VISIBLE
+          // Floating WebSocket Test Button - KEEP THIS
           const FloatingWSTestButton(),
         ],
       ),
@@ -477,6 +473,53 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
                     );
                   }).toList();
                 }(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 24),
+          Text(
+            'Expiry:',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(width: 8),
+          // Copy exact expiry dropdown from option chain widget
+          Container(
+            width: 170,
+            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.dividerColor),
+              borderRadius: BorderRadius.circular(6),
+              color: theme.colorScheme.surface,
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedExpiry,
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    _onExpiryChanged(newValue);
+                  }
+                },
+                hint: const Text('Select Expiry'),
+                items: () {
+                  final availableExpiries = ref.watch(availableExpiriesProvider);
+                  return availableExpiries.map((expiry) {
+                    return DropdownMenuItem<String>(
+                      value: expiry,
+                      child: Text(
+                        expiry,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList();
+                }(),
+                icon: Icon(
+                  Icons.keyboard_arrow_down,
+                  size: 18,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
             ),
           ),

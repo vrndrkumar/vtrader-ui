@@ -156,62 +156,6 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     }
   }
 
-  Widget _buildExpiryDropdown(BuildContext context, ThemeData theme) {
-    final selectedIndex = ref.watch(selectedIndexProvider);
-    final availableExpiries = ref.watch(availableExpiriesProvider);
-    final selectedExpiry = ref.watch(selectedExpiryProvider);
-    
-    // Get current expiry as default
-    final currentExpiry = '${widget.optionChain.expiry.day}/${widget.optionChain.expiry.month}/${widget.optionChain.expiry.year}';
-    
-    // Create list of all available expiries
-    List<String> allExpiries = [currentExpiry];
-    if (availableExpiries.isNotEmpty) {
-      final formattedExpiries = availableExpiries.map((expiry) => _formatExpiryForDropdown(expiry)).toList();
-      allExpiries.addAll(formattedExpiries);
-      // Remove duplicates
-      allExpiries = allExpiries.toSet().toList();
-    }
-    
-    return Container(
-      width: 170, // Increased width for better visibility
-      height: 32, // Fixed height to match price box
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // Match price element height
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.dividerColor),
-        borderRadius: BorderRadius.circular(6), // Match price element border radius
-        color: theme.colorScheme.surface,
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedExpiry ?? currentExpiry,
-          onChanged: (String? newValue) {
-            if (newValue != null) {
-              ref.read(selectedExpiryProvider.notifier).state = newValue;
-            }
-          },
-          items: allExpiries.map((expiry) {
-            final isCurrentExpiry = expiry == currentExpiry;
-            return DropdownMenuItem<String>(
-              value: expiry,
-              child: Text(
-                expiry,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: isCurrentExpiry ? FontWeight.bold : FontWeight.w500,
-                  color: isCurrentExpiry ? theme.colorScheme.primary : null,
-                ),
-              ),
-            );
-          }).toList(),
-          icon: Icon(
-            Icons.keyboard_arrow_down,
-            size: 18,
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
-      ),
-    );
-  }
 
   String _formatExpiryForDropdown(String expiry) {
     try {
@@ -266,9 +210,6 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
               // Price next to title
               _buildPriceOnly(theme, isPositive),
               const SizedBox(width: 32),
-              
-              // Expiry Dropdown
-              _buildExpiryDropdown(context, theme),
               
               const Spacer(),
               
