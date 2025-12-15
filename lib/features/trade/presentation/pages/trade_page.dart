@@ -40,6 +40,7 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   Timer? _refreshTimer;
   bool _isLoading = true;
   StreamSubscription<OptionChainModel?>? _optionChainSubscription;
+  bool _hasInitialized = false; // Flag to ensure initialization happens only once
 
   // Panel size persistence keys
   static const String _horizontalRatioKey = 'trade_page_horizontal_ratio';
@@ -58,11 +59,6 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
     _initializeWebSocket();
     _loadInitialData();
     _startAutoRefresh();
-
-    // Listen to master data changes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeFromMasterData();
-    });
   }
 
   @override
@@ -198,8 +194,18 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   }
 
   void _initializeFromMasterData() {
+    // Only initialize once
+    if (_hasInitialized) {
+      debugPrint('⏭️ Already initialized, skipping');
+      return;
+    }
+    
     final masterDataState = ref.read(masterDataStateProvider);
-    if (masterDataState.hasData) {
+    debugPrint('🔍 Initializing from master data: isLoading=${masterDataState.isLoading}, hasData=${masterDataState.hasData}, indices count=${masterDataState.indices.length}');
+    
+    if (masterDataState.hasData && !masterDataState.isLoading) {
+      _hasInitialized = true; // Mark as initialized
+      
       // Set default index if not already set
       final selectedIndex = ref.read(selectedIndexProvider);
       if (selectedIndex == null) {
@@ -207,12 +213,18 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         ref.read(selectedIndexProvider.notifier).state = defaultIndex;
         _onIndexChanged(defaultIndex.symbolCode);
         
-        // Subscribe to WebSocket with first expiry after index is set
-        final expiries = defaultIndex.formattedExpiryDates;
-        debugPrint('📅 Available expiries: $expiries');
-        if (expiries.isNotEmpty) {
-          final apiExpiry = expiries.first; // e.g., "14OCT25"
-          final dropdownExpiry = _convertApiExpiryToDropdown(apiExpiry); // e.g., "14/10/2025"
+        // Get expiry dates in both formats
+        final expiryDates = defaultIndex.expiryDates;
+        debugPrint('📅 Available ${expiryDates.length} expiry dates');
+        
+        if (expiryDates.isNotEmpty) {
+          final firstDate = expiryDates.first;
+          
+          // Convert to dropdown format: DD/MM/YYYY
+          final dropdownExpiry = '${firstDate.day.toString().padLeft(2, '0')}/${firstDate.month.toString().padLeft(2, '0')}/${firstDate.year}';
+          
+          // Convert to API format: DDMMMYY (e.g., 14OCT25)
+          final apiExpiry = defaultIndex.formattedExpiryDates.first;
           
           debugPrint('📅 Setting expiry: API=$apiExpiry, Dropdown=$dropdownExpiry');
           
@@ -230,22 +242,24 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         }
       } else {
         // Subscribe to WebSocket for currently selected index/expiry
-        final expiries = selectedIndex.formattedExpiryDates;
-        debugPrint('📅 Index already selected: ${selectedIndex.symbolCode}, expiries: $expiries');
+        final expiryDates = selectedIndex.expiryDates;
+        debugPrint('📅 Index already selected: ${selectedIndex.symbolCode}, ${expiryDates.length} expiries');
         
-        if (expiries.isNotEmpty) {
+        if (expiryDates.isNotEmpty) {
           // Use first expiry if none selected
-          final dropdownExpiry = _selectedExpiry ?? _convertApiExpiryToDropdown(expiries.first);
-          final apiExpiry = _convertDropdownToApiExpiry(dropdownExpiry);
-          
-          debugPrint('📅 Using expiry: Dropdown=$dropdownExpiry, API=$apiExpiry');
-          
           if (_selectedExpiry == null) {
+            final firstDate = expiryDates.first;
+            final dropdownExpiry = '${firstDate.day.toString().padLeft(2, '0')}/${firstDate.month.toString().padLeft(2, '0')}/${firstDate.year}';
+            
             setState(() {
               _selectedExpiry = dropdownExpiry;
             });
             ref.read(selectedExpiryProvider.notifier).state = dropdownExpiry;
           }
+          
+          final apiExpiry = _convertDropdownToApiExpiry(_selectedExpiry!);
+          
+          debugPrint('📅 Using expiry: Dropdown=$_selectedExpiry, API=$apiExpiry');
           
           WidgetsBinding.instance.addPostFrameCallback((_) {
             debugPrint('📡 Subscribing to: ${selectedIndex.symbolCode} - $apiExpiry');
@@ -338,6 +352,17 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
+    // Check if master data is loaded and initialize if needed
+    final masterDataState = ref.watch(masterDataStateProvider);
+    if (!_hasInitialized && masterDataState.hasData && !masterDataState.isLoading) {
+      debugPrint('🚀 Master data is ready, triggering initialization from build');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _initializeFromMasterData();
+        }
+      });
+    }
+    
     return Scaffold(
       key: ValueKey('trade_page_$_selectedIndex'),
       body: Stack(

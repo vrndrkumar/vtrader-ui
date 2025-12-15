@@ -24,12 +24,15 @@ final selectedExpiryProvider = StateProvider<String?>((ref) {
   return null;
 });
 
-/// Provider to get available expiries for selected index
+/// Provider to get available expiries for selected index (in dropdown format)
 final availableExpiriesProvider = Provider<List<String>>((ref) {
   final selectedIndex = ref.watch(selectedIndexProvider);
   if (selectedIndex == null) return [];
   
-  return selectedIndex.formattedExpiryDates;
+  // Convert from API format (14OCT25) to dropdown format (14/10/2025)
+  return selectedIndex.expiryDates.map((date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }).toList();
 });
 
 /// Provider to get index by symbol code

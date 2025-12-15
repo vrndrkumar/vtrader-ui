@@ -100,10 +100,31 @@ class RealOptionChainService {
         return;
       }
 
-      // Group options by strike price
+      // IMPORTANT: First entry is the underlying index data
+      // Extract underlying price from the first entry
+      if (protobufChain.options.isNotEmpty) {
+        final firstOption = protobufChain.options.first;
+        if (firstOption.strikePrice < 0 || firstOption.optionType.isEmpty) {
+          // This is the underlying index data
+          _currentUnderlyingPrice = firstOption.ltp;
+          debugPrint('💰 Underlying Price: $_currentUnderlyingPrice from first entry');
+        }
+      }
+
+      // Group options by strike price (skip first entry if it's underlying data)
       final Map<double, Map<String, proto.OptionData>> strikeMap = {};
       
+      int skippedCount = 0;
+      int processedCount = 0;
+      
       for (final option in protobufChain.options) {
+        // Skip underlying index data (strike < 0 or no option type)
+        if (option.strikePrice < 0 || option.optionType.isEmpty) {
+          debugPrint('⏭️ Skipping underlying data: Symbol=${option.symbol}, Strike=${option.strikePrice}, Type=${option.optionType}');
+          skippedCount++;
+          continue;
+        }
+        
         final strike = option.strikePrice;
         
         if (!strikeMap.containsKey(strike)) {
@@ -112,32 +133,38 @@ class RealOptionChainService {
         
         final optionType = option.optionType.toUpperCase();
         strikeMap[strike]![optionType] = option;
-
-        // Update underlying price (assume it's similar across options)
-        if (optionType == 'CE' || optionType == 'CALL') {
-          // Estimate underlying price from ATM options
-          _currentUnderlyingPrice = strike;
-        }
+        processedCount++;
+        
+        debugPrint('✓ Processed: Strike=$strike, Type=$optionType, Symbol=${option.symbol}, LTP=${option.ltp}');
       }
+
+      debugPrint('📊 Processed $processedCount options, skipped $skippedCount, grouped into ${strikeMap.length} unique strikes');
 
       // Convert to StrikePriceData list
       final List<StrikePriceData> strikes = [];
+      int incompleteCount = 0;
+      
+      debugPrint('🔍 Examining ${strikeMap.length} strikes for completeness:');
       
       for (final entry in strikeMap.entries) {
         final strikePrice = entry.key;
         final options = entry.value;
         
+        debugPrint('  Strike $strikePrice: Available types = ${options.keys.toList()}');
+        
         final callOption = options['CE'] ?? options['CALL'];
         final putOption = options['PE'] ?? options['PUT'];
 
         if (callOption == null || putOption == null) {
+          debugPrint('  ⚠️ INCOMPLETE Strike $strikePrice: CE=${callOption != null}, PE=${putOption != null}');
+          incompleteCount++;
           continue; // Skip incomplete strikes
         }
 
         final call = _convertProtobufToOptionData(callOption);
         final put = _convertProtobufToOptionData(putOption);
 
-        final isAtm = (_currentUnderlyingPrice - strikePrice).abs() < 50.0;
+        final isAtm = (_currentUnderlyingPrice - strikePrice).abs() < 100.0;
         final isItm = strikePrice < _currentUnderlyingPrice;
 
         strikes.add(StrikePriceData(
@@ -147,10 +174,14 @@ class RealOptionChainService {
           call: call,
           put: put,
         ));
+        
+        debugPrint('  ✅ COMPLETE Strike $strikePrice: CE LTP=${callOption.ltp}, PE LTP=${putOption.ltp}');
       }
 
       // Sort strikes by price
       strikes.sort((a, b) => a.strikePrice.compareTo(b.strikePrice));
+
+      debugPrint('✅ Created ${strikes.length} complete strikes (skipped $incompleteCount incomplete)');
 
       // Parse expiry
       final expiry = _parseExpiry(_currentExpiry);
@@ -167,7 +198,7 @@ class RealOptionChainService {
       _currentOptionChain = optionChain;
       _optionChainController.add(optionChain);
 
-      debugPrint('✅ RealOptionChainService: Processed ${strikes.length} strikes for $_currentIndex');
+      debugPrint('✅ RealOptionChainService: Processed ${strikes.length} strikes for $_currentIndex @ $_currentUnderlyingPrice');
     } catch (e, stackTrace) {
       debugPrint('❌ RealOptionChainService: Error processing protobuf data: $e');
       debugPrint('Stack trace: $stackTrace');
