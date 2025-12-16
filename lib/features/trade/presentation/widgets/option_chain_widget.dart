@@ -323,31 +323,20 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   }
 
   Widget _buildTableHeader(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Call side headers
-          _buildHeaderCell('OI', 60),
-          _buildHeaderCell('Volume', 70),
-          _buildHeaderCell('IV', 50),
-          _buildHeaderCell('LTP', 60),
-          _buildHeaderCell('Chg', 80),
-          _buildHeaderCell('Bid', 60),
+          // PUT side (requested order)
           _buildHeaderCell('Ask', 60),
-          
-          // Strike header (center)
+          _buildHeaderCell('Bid', 60),
+
+          // Strike (center)
           _buildHeaderCell('Strike', 80, isCenter: true),
-          
-          // Put side headers
-          _buildHeaderCell('Bid', 60),
+
+          // CALL side (requested order)
           _buildHeaderCell('Ask', 60),
-          _buildHeaderCell('Chg', 80),
-          _buildHeaderCell('LTP', 60),
-          _buildHeaderCell('IV', 50),
-          _buildHeaderCell('Volume', 70),
-          _buildHeaderCell('OI', 60),
+          _buildHeaderCell('Bid', 60),
         ],
       ),
     );
@@ -365,6 +354,38 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   }
 
   Widget _buildTableRows(BuildContext context) {
+    if (widget.optionChain.strikes.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(32),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.table_chart_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Waiting for option chain data...',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Data may be unavailable outside market hours.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
     return Column(
       children: widget.optionChain.strikes.map((strike) => _buildTableRow(context, strike)).toList(),
     );
@@ -408,26 +429,16 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            // Call side
-            _buildDataCell(call?.openInterest?.toString() ?? '-', 60),
-            _buildDataCell(call?.volume.toString() ?? '-', 70),
-            _buildDataCell(call?.iv.toStringAsFixed(1) ?? '-', 50),
-            _buildInteractiveDataCell(call?.ltp ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'CE', bid: call?.bid, ask: call?.ask),
-            _buildChangeDataCell(call?.change, call?.changePercent, 80),
-            _buildInteractiveDataCell(call?.bid ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'CE', bid: call?.bid, ask: call?.ask),
-            _buildInteractiveDataCell(call?.ask ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'CE', bid: call?.bid, ask: call?.ask),
-            
-            // Strike price (center)
+            // PUT (requested order: Ask, Bid)
+            _buildInteractiveDataCell(put?.ask, 60),
+            _buildInteractiveDataCell(put?.bid, 60),
+
+            // Strike (center)
             _buildStrikeCell(strike, 80, context),
-            
-            // Put side
-            _buildInteractiveDataCell(put?.bid ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'PE', bid: put?.bid, ask: put?.ask),
-            _buildInteractiveDataCell(put?.ask ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'PE', bid: put?.bid, ask: put?.ask),
-            _buildChangeDataCell(put?.change, put?.changePercent, 80),
-            _buildInteractiveDataCell(put?.ltp ?? 0, 60, strike.strikePrice.toStringAsFixed(0), 'PE', bid: put?.bid, ask: put?.ask),
-            _buildDataCell(put?.iv.toStringAsFixed(1) ?? '-', 50),
-            _buildDataCell(put?.volume.toString() ?? '-', 70),
-            _buildDataCell(put?.openInterest?.toString() ?? '-', 60),
+
+            // CALL (requested order: Ask, Bid)
+            _buildInteractiveDataCell(call?.ask, 60),
+            _buildInteractiveDataCell(call?.bid, 60),
           ],
         ),
       ),
@@ -445,7 +456,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     );
   }
 
-  Widget _buildInteractiveDataCell(double value, double width, String strike, String optionType, {double? bid, double? ask}) {
+  Widget _buildInteractiveDataCell(double? value, double width) {
     return _buildPriceDataCell(value, width);
   }
 

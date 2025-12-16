@@ -101,18 +101,35 @@ class OptionChainWebSocketService {
   /// Handle incoming messages
   void _handleMessage(dynamic message) {
     try {
+      // Flutter Web may deliver binary frames as Uint8List, ByteBuffer, or List<int>.
+      Uint8List? bytes;
       if (message is Uint8List) {
-        debugPrint('📦 WebSocket: Received binary message (${message.length} bytes)');
-        
+        bytes = message;
+      } else if (message is ByteBuffer) {
+        bytes = message.asUint8List();
+      } else if (message is List<int>) {
+        bytes = Uint8List.fromList(message);
+      }
+
+      if (bytes != null) {
+        debugPrint('📦 WebSocket: Received binary message (${bytes.length} bytes) type=${message.runtimeType}');
+
         // Decode Protobuf message
-        final optionChain = OptionChain.fromBuffer(message);
-        
+        final optionChain = OptionChain.fromBuffer(bytes);
+
         debugPrint('📊 WebSocket: Decoded ${optionChain.options.length} option data points');
-        
+        final takeN = optionChain.options.length < 5 ? optionChain.options.length : 5;
+        for (var i = 0; i < takeN; i++) {
+          final o = optionChain.options[i];
+          debugPrint('📊 WS[$i]: strike=${o.strikePrice}, type="${o.optionType}", bid=${o.bid}, ask=${o.ask}');
+        }
+
         // Emit to stream
         _optionChainController.add(optionChain);
-        
-      } else if (message is String) {
+        return;
+      }
+
+      if (message is String) {
         debugPrint('📨 WebSocket: Received text message: $message');
         
         // Handle text responses (subscription confirmations, errors, etc.)

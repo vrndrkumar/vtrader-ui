@@ -40,7 +40,8 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   Timer? _refreshTimer;
   bool _isLoading = true;
   StreamSubscription<OptionChainModel?>? _optionChainSubscription;
-  bool _hasInitialized = false; // Flag to ensure initialization happens only once
+  ProviderSubscription<MasterDataState>? _masterDataSubscription;
+  bool _hasInitialized = false; // One-time master-data init guard (called from initState)
 
   // Panel size persistence keys
   static const String _horizontalRatioKey = 'trade_page_horizontal_ratio';
@@ -55,16 +56,47 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
     _selectedIndex = widget.symbol ?? 'NIFTY';
     _realOptionChainService = RealOptionChainService.instance;
     
+    // Initialize with empty option chain so table is always visible
+    _optionChain = _createEmptyOptionChain();
+    
+    // React when master data finishes loading (initState-safe).
+    _masterDataSubscription = ref.listenManual<MasterDataState>(
+      masterDataStateProvider,
+      (previous, next) {
+        if (!_hasInitialized && next.hasData && !next.isLoading) {
+          _initializeFromMasterData();
+        }
+      },
+    );
+
     _loadPanelSizes();
     _initializeWebSocket();
     _loadInitialData();
     _startAutoRefresh();
+
+    // Initialize index/expiry + subscribe once master data is available (covers already-cached master data).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _initializeFromMasterData();
+      }
+    });
+  }
+
+  OptionChainModel _createEmptyOptionChain() {
+    return OptionChainModel(
+      underlying: _selectedIndex,
+      underlyingPrice: 0.0,
+      expiry: DateTime.now(),
+      strikes: [],
+      lastUpdated: DateTime.now(),
+    );
   }
 
   @override
   void dispose() {
     _refreshTimer?.cancel();
     _optionChainSubscription?.cancel();
+    _masterDataSubscription?.close();
     _marketDataService.stopPriceUpdates();
     _realOptionChainService.dispose();
     super.dispose();
@@ -135,14 +167,12 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
 
   Future<void> _refreshData() async {
     try {
-      final optionChain = _marketDataService.generateOptionChain(_selectedIndex);
       final candleData = _marketDataService.generateCandleData(_selectedIndex);
       final positions = _marketDataService.generateMockPositions();
       final orders = _marketDataService.generateMockOrders();
 
       if (mounted) {
         setState(() {
-          _optionChain = optionChain;
           _candleData = candleData;
           _positions = positions;
           _orders = orders;
@@ -164,8 +194,8 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         _selectedIndex = newIndex;
         _selectedExpiry = null; // Reset expiry when index changes
         _isLoading = true;
-        // Clear existing data to force complete rebuild
-        _optionChain = null;
+        // Reset to empty option chain instead of null
+        _optionChain = _createEmptyOptionChain();
         _candleData = [];
         _positions = [];
         _orders = [];
@@ -209,9 +239,19 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
       // Set default index if not already set
       final selectedIndex = ref.read(selectedIndexProvider);
       if (selectedIndex == null) {
-        final defaultIndex = masterDataState.indices.first;
+        // Prefer the page's default `_selectedIndex` if present in master data; otherwise use first.
+        final defaultIndex = masterDataState.indices.firstWhere(
+          (idx) => idx.symbolCode == _selectedIndex,
+          orElse: () => masterDataState.indices.first,
+        );
         ref.read(selectedIndexProvider.notifier).state = defaultIndex;
-        _onIndexChanged(defaultIndex.symbolCode);
+        if (mounted) {
+          setState(() {
+            _selectedIndex = defaultIndex.symbolCode;
+          });
+        }
+        // Keep other panels (chart/positions/orders) updated; does NOT touch option-chain data.
+        _loadInitialData();
         
         // Get expiry dates in both formats
         final expiryDates = defaultIndex.expiryDates;
@@ -241,6 +281,14 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
           debugPrint('⚠️ No expiries available for ${defaultIndex.symbolCode}');
         }
       } else {
+        // Sync local selected index with provider (do not clear option chain).
+        if (_selectedIndex != selectedIndex.symbolCode && mounted) {
+          setState(() {
+            _selectedIndex = selectedIndex.symbolCode;
+          });
+          _loadInitialData();
+        }
+
         // Subscribe to WebSocket for currently selected index/expiry
         final expiryDates = selectedIndex.expiryDates;
         debugPrint('📅 Index already selected: ${selectedIndex.symbolCode}, ${expiryDates.length} expiries');
@@ -326,15 +374,28 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
       // Listen to real-time option chain updates
       _optionChainSubscription = _realOptionChainService.optionChainStream.listen(
         (optionChain) {
-          if (optionChain != null && mounted) {
-            debugPrint('📊 TradePage: Received option chain with ${optionChain.strikes.length} strikes');
-            setState(() {
-              _optionChain = optionChain;
-            });
+          if (mounted) {
+            if (optionChain != null) {
+              debugPrint('📊 TradePage: Received option chain with ${optionChain.strikes.length} strikes');
+              setState(() {
+                _optionChain = optionChain;
+              });
+            } else {
+              // When null is received, use empty option chain to keep table visible
+              debugPrint('📊 TradePage: No data received, showing empty option chain');
+              setState(() {
+                _optionChain = _createEmptyOptionChain();
+              });
+            }
           }
         },
         onError: (error) {
           debugPrint('❌ TradePage: Error in option chain stream: $error');
+          if (mounted) {
+            setState(() {
+              _optionChain = _createEmptyOptionChain();
+            });
+          }
         },
       );
       
@@ -352,17 +413,6 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    // Check if master data is loaded and initialize if needed
-    final masterDataState = ref.watch(masterDataStateProvider);
-    if (!_hasInitialized && masterDataState.hasData && !masterDataState.isLoading) {
-      debugPrint('🚀 Master data is ready, triggering initialization from build');
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _initializeFromMasterData();
-        }
-      });
-    }
-    
     return Scaffold(
       key: ValueKey('trade_page_$_selectedIndex'),
       body: Stack(
@@ -596,38 +646,10 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
           Expanded(
             child: TabBarView(
               children: [
-                _optionChain != null
-                    ? OptionChainWidget(
-                        optionChain: _optionChain!,
-                        onRefresh: _refreshData,
-                      )
-                    : Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const CircularProgressIndicator(),
-                            const SizedBox(height: 16),
-                            Text('Waiting for option chain data...'),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Index: $_selectedIndex | Expiry: ${_selectedExpiry ?? "Not set"}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Check test widget at bottom-right →',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                OptionChainWidget(
+                  optionChain: _optionChain!,
+                  onRefresh: _refreshData,
+                ),
                 ChartWidget(
                   candleData: _candleData,
                   symbol: _selectedIndex,
@@ -665,67 +687,11 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         },
         children: [
           // Left Panel - Option Chain (full height)
-          _optionChain != null
-              ? OptionChainWidget(
-                  key: ValueKey('option_chain_$_selectedIndex'),
-                  optionChain: _optionChain!,
-                  onRefresh: _refreshData,
-                )
-              : Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Waiting for option chain data...',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              'Index: $_selectedIndex',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Expiry: ${_selectedExpiry ?? "⚠️ NOT SET - Please select expiry"}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _selectedExpiry == null ? Colors.red : Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        '👉 Check test widget at bottom-right corner',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '📊 WebSocket Status Panel at top',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          OptionChainWidget(
+            key: ValueKey('option_chain_$_selectedIndex'),
+            optionChain: _optionChain!,
+            onRefresh: _refreshData,
+          ),
           
           // Right Panel - Chart and Positions/Orders (Vertical split)
           ResizableWidget(
