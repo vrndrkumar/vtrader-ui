@@ -313,16 +313,31 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   }
 
   Widget _buildOptionChainTable(BuildContext context) {
+    // Calculate minimum table width to prevent column compression
+    const premiumColWidth = 90.0;
+    const strikeColWidth = 100.0;
+    const tableHPad = 16.0;
+    const minTableWidth = (premiumColWidth * 4) + strikeColWidth + (tableHPad * 2); // 4 premium cols + 1 strike + padding
+    
     return Column(
       children: [
-        // Fixed header
-        _buildTableHeader(context),
+        // Fixed header with horizontal scroll
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: minTableWidth),
+            child: _buildTableHeader(context),
+          ),
+        ),
         // Scrollable data rows
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              child: _buildTableRows(context),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: minTableWidth),
+              child: SingleChildScrollView(
+                child: _buildTableRows(context),
+              ),
             ),
           ),
         ),
