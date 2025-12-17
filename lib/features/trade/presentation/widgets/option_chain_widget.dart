@@ -335,12 +335,13 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     final isDark = theme.brightness == Brightness.dark;
     const premiumColWidth = 90.0;
     const strikeColWidth = 100.0;
+    const tableHPad = 16.0;
     
     return Column(
       children: [
         // Main section headers: CALL | Strike Price | PUT
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: tableHPad, vertical: 12),
           decoration: BoxDecoration(
             color: isDark ? theme.colorScheme.surfaceVariant : Colors.grey[100],
             border: Border(
@@ -398,7 +399,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
         
         // Column headers: Ask, Bid for each side
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: tableHPad, vertical: 10),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface,
             border: Border(
@@ -479,6 +480,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     final underlyingPrice = widget.optionChain.underlyingPrice;
     const premiumColWidth = 90.0;
     const strikeColWidth = 100.0;
+    const tableHPad = 16.0;
     
     // Calculate ITM separately for CALL and PUT
     // CALL is ITM when underlying > strike
@@ -526,64 +528,69 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
             ),
           ),
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // CALL side (LEFT of strike)
-              Container(
-                width: premiumColWidth * 2,
-                color: callBgColor,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                child: Row(
-                  children: [
-                    SizedBox(width: premiumColWidth, child: _buildPremiumText(call?.ask, theme, isCall: true)),
-                    SizedBox(width: premiumColWidth, child: _buildPremiumText(call?.bid, theme, isCall: true)),
-                  ],
-                ),
-              ),
-              
-              // Strike (center) - Distinct background
-              Container(
-                width: strikeColWidth,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: strike.isAtm
-                      ? (isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE3F2FD))
-                      : (isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5)),
-                  border: strike.isAtm
-                      ? Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.6),
-                          width: 1.5,
-                        )
-                      : null,
-                ),
-                child: Text(
-                  strike.strikePrice.toStringAsFixed(0),
-                  style: TextStyle(
-                    fontWeight: strike.isAtm ? FontWeight.bold : FontWeight.w600,
-                    fontSize: strike.isAtm ? 13 : 12,
-                    color: strike.isAtm
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: tableHPad),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // CALL side (LEFT of strike) - NO extra padding so it aligns with headers
+                Container(
+                  width: premiumColWidth * 2,
+                  color: callBgColor,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(call?.ask, theme, isCall: true))),
+                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(call?.bid, theme, isCall: true))),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
-              ),
-              
-              // PUT side (RIGHT of strike)
-              Container(
-                width: premiumColWidth * 2,
-                color: putBgColor,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                child: Row(
-                  children: [
-                    SizedBox(width: premiumColWidth, child: _buildPremiumText(put?.bid, theme, isCall: false)),
-                    SizedBox(width: premiumColWidth, child: _buildPremiumText(put?.ask, theme, isCall: false)),
-                  ],
+                
+                // Strike (center) - Distinct background
+                Container(
+                  width: strikeColWidth,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: strike.isAtm
+                        ? (isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE3F2FD))
+                        : (isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5)),
+                    border: strike.isAtm
+                        ? Border.all(
+                            color: theme.colorScheme.primary.withOpacity(0.6),
+                            width: 1.5,
+                          )
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      strike.strikePrice.toStringAsFixed(0),
+                      style: TextStyle(
+                        fontWeight: strike.isAtm ? FontWeight.bold : FontWeight.w600,
+                        fontSize: strike.isAtm ? 13 : 12,
+                        color: strike.isAtm
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                
+                // PUT side (RIGHT of strike) - NO extra padding so it aligns with headers
+                Container(
+                  width: premiumColWidth * 2,
+                  color: putBgColor,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(put?.bid, theme, isCall: false))),
+                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(put?.ask, theme, isCall: false))),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
