@@ -520,15 +520,17 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     final isCallItm = call != null && underlyingPrice > strike.strikePrice;
     final isPutItm = put != null && underlyingPrice < strike.strikePrice;
     
-    // Subtle ITM backgrounds (cream/beige)
+    // Attractive ITM backgrounds - light green for calls, light red for puts
     Color? callBgColor;
     Color? putBgColor;
     
     if (isCallItm) {
-      callBgColor = isDark ? const Color(0xFF2A3A2E) : const Color(0xFFFFF8E1);
+      // Light green/mint for CALL ITM
+      callBgColor = isDark ? const Color(0xFF1B3A2F) : const Color(0xFFE8F5E9);
     }
     if (isPutItm) {
-      putBgColor = isDark ? const Color(0xFF3A2E2E) : const Color(0xFFFFF8E1);
+      // Light red/pink for PUT ITM
+      putBgColor = isDark ? const Color(0xFF3A1B1B) : const Color(0xFFFFEBEE);
     }
 
     return MouseRegion(
@@ -643,7 +645,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
         fontFamily: 'monospace',
         fontSize: 12,
         color: hasValue
-            ? (isCall ? Colors.green[800] : Colors.red[800])
+            ? Colors.black87
             : theme.colorScheme.onSurface.withOpacity(0.3),
       ),
       textAlign: TextAlign.center,
