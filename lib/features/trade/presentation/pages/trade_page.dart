@@ -64,7 +64,12 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
       masterDataStateProvider,
       (previous, next) {
         if (!_hasInitialized && next.hasData && !next.isLoading) {
-          _initializeFromMasterData();
+          // Schedule after current frame to avoid setState during build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              _initializeFromMasterData();
+            }
+          });
         }
       },
     );
