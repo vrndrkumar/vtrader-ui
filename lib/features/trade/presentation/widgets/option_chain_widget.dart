@@ -524,13 +524,11 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     Color? callBgColor;
     Color? putBgColor;
     
-    if (!strike.isAtm) {
-      if (isCallItm) {
-        callBgColor = isDark ? const Color(0xFF2A3A2E) : const Color(0xFFFFF8E1);
-      }
-      if (isPutItm) {
-        putBgColor = isDark ? const Color(0xFF3A2E2E) : const Color(0xFFFFF8E1);
-      }
+    if (isCallItm) {
+      callBgColor = isDark ? const Color(0xFF2A3A2E) : const Color(0xFFFFF8E1);
+    }
+    if (isPutItm) {
+      putBgColor = isDark ? const Color(0xFF3A2E2E) : const Color(0xFFFFF8E1);
     }
 
     return MouseRegion(
@@ -560,59 +558,75 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
             ),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: tableHPad, vertical: 10),
-          child: Row(
-            children: [
-              // CALL Ask - exact same structure as header
-              Container(
-                width: premiumColWidth,
-                color: callBgColor,
-                alignment: Alignment.center,
-                child: _buildPremiumText(call?.ask, theme, isCall: true),
-              ),
-              // CALL Bid - exact same structure as header
-              Container(
-                width: premiumColWidth,
-                color: callBgColor,
-                alignment: Alignment.center,
-                child: _buildPremiumText(call?.bid, theme, isCall: true),
-              ),
-              
-                // Strike (center) - Distinct background (removed blue ATM border)
-                Container(
-                  width: strikeColWidth,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    strike.strikePrice.toStringAsFixed(0),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurface,
+        child: Row(
+          children: [
+            // Left padding
+            const SizedBox(width: tableHPad),
+            
+            // CALL side - unified background for entire area (both Ask and Bid)
+            Container(
+              width: premiumColWidth * 2,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              color: callBgColor,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: _buildPremiumText(call?.ask, theme, isCall: true),
                     ),
-                    textAlign: TextAlign.center,
                   ),
+                  Expanded(
+                    child: Center(
+                      child: _buildPremiumText(call?.bid, theme, isCall: true),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Strike (center) - Distinct background
+            Container(
+              width: strikeColWidth,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                strike.strikePrice.toStringAsFixed(0),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurface,
                 ),
-              
-              // PUT Bid - exact same structure as header
-              Container(
-                width: premiumColWidth,
-                color: putBgColor,
-                alignment: Alignment.center,
-                child: _buildPremiumText(put?.bid, theme, isCall: false),
+                textAlign: TextAlign.center,
               ),
-              // PUT Ask - exact same structure as header
-              Container(
-                width: premiumColWidth,
-                color: putBgColor,
-                alignment: Alignment.center,
-                child: _buildPremiumText(put?.ask, theme, isCall: false),
+            ),
+            
+            // PUT side - unified background for entire area (both Bid and Ask)
+            Container(
+              width: premiumColWidth * 2,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              color: putBgColor,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: _buildPremiumText(put?.bid, theme, isCall: false),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: _buildPremiumText(put?.ask, theme, isCall: false),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+            
+            // Right padding
+            const SizedBox(width: tableHPad),
+          ],
         ),
       ),
     );
