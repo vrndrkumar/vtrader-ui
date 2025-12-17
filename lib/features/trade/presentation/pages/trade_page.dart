@@ -646,9 +646,16 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
           Expanded(
             child: TabBarView(
               children: [
-                OptionChainWidget(
-                  optionChain: _optionChain!,
-                  onRefresh: _refreshData,
+                StreamBuilder<OptionChainModel?>(
+                  stream: _realOptionChainService.optionChainStream,
+                  initialData: _optionChain,
+                  builder: (context, snapshot) {
+                    final optionChain = snapshot.data ?? _createEmptyOptionChain();
+                    return OptionChainWidget(
+                      optionChain: optionChain,
+                      onRefresh: _refreshData,
+                    );
+                  },
                 ),
                 ChartWidget(
                   candleData: _candleData,
@@ -686,11 +693,18 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
           }
         },
         children: [
-          // Left Panel - Option Chain (full height)
-          OptionChainWidget(
-            key: ValueKey('option_chain_$_selectedIndex'),
-            optionChain: _optionChain!,
-            onRefresh: _refreshData,
+          // Left Panel - Option Chain (full height) - USE STREAMBUILDER FOR REAL-TIME UPDATES
+          StreamBuilder<OptionChainModel?>(
+            stream: _realOptionChainService.optionChainStream,
+            initialData: _optionChain,
+            builder: (context, snapshot) {
+              final optionChain = snapshot.data ?? _createEmptyOptionChain();
+              debugPrint('🔄 StreamBuilder: Building OptionChainWidget with ${optionChain.strikes.length} strikes');
+              return OptionChainWidget(
+                optionChain: optionChain,
+                onRefresh: _refreshData,
+              );
+            },
           ),
           
           // Right Panel - Chart and Positions/Orders (Vertical split)
