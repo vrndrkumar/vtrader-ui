@@ -177,65 +177,80 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
 
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
-    final isPositive = widget.optionChain.underlyingPrice >= 0;
-    final masterDataState = ref.watch(masterDataStateProvider);
-    final selectedIndex = ref.watch(selectedIndexProvider);
+    final hasPrice = widget.optionChain.underlyingPrice > 0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: theme.cardColor,
+        color: theme.colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: theme.dividerColor.withOpacity(0.5),
+            color: theme.dividerColor,
             width: 1,
           ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Title Row with Price and Controls
-          Row(
-            children: [
-              // Title
-              Text(
-                '${widget.optionChain.underlying} Option Chain',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+          // Index price box (moved from top-right as requested)
+          if (hasPrice)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  width: 1,
                 ),
               ),
-              const SizedBox(width: 24),
-              
-              // Price next to title
-              _buildPriceOnly(theme, isPositive),
-              const SizedBox(width: 32),
-              
-              const Spacer(),
-              
-              // Refresh Button
-              if (widget.onRefresh != null)
-                Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.optionChain.underlying,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  child: IconButton(
-                    onPressed: widget.onRefresh,
-                    icon: Icon(
-                      Icons.refresh,
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.trending_up,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '₹${widget.optionChain.underlyingPrice.toStringAsFixed(2)}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
-                    tooltip: 'Refresh Data',
-                    padding: const EdgeInsets.all(8),
-                    constraints: const BoxConstraints(
-                      minWidth: 40,
-                      minHeight: 40,
-                    ),
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+            )
+          else
+            Text(
+              widget.optionChain.underlying,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.3,
+              ),
+            ),
+          const Spacer(),
+          
+          // Refresh Button
+          if (widget.onRefresh != null)
+            IconButton(
+              onPressed: widget.onRefresh,
+              icon: Icon(
+                Icons.refresh,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              tooltip: 'Refresh Data',
+            ),
         ],
       ),
     );
@@ -301,14 +316,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     return Column(
       children: [
         // Fixed header
-        Container(
-          color: Theme.of(context).cardColor,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: _buildTableHeader(context),
-          ),
-        ),
-        const Divider(height: 1),
+        _buildTableHeader(context),
         // Scrollable data rows
         Expanded(
           child: SingleChildScrollView(
@@ -323,33 +331,122 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   }
 
   Widget _buildTableHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          // PUT side (requested order)
-          _buildHeaderCell('Ask', 60),
-          _buildHeaderCell('Bid', 60),
-
-          // Strike (center)
-          _buildHeaderCell('Strike', 80, isCenter: true),
-
-          // CALL side (requested order)
-          _buildHeaderCell('Ask', 60),
-          _buildHeaderCell('Bid', 60),
-        ],
-      ),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return Column(
+      children: [
+        // Main section headers: CALL | Strike Price | PUT
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? theme.colorScheme.surfaceVariant : Colors.grey[100],
+            border: Border(
+              bottom: BorderSide(
+                color: theme.dividerColor.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              // CALL section header
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'CALL',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.green[700],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              
+              // Strike section header
+              SizedBox(
+                width: 100,
+                child: Text(
+                  'Strike',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              
+              // PUT section header
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'PUT',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                    color: Colors.red[700],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Column headers: Ask, Bid for each side
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(
+                color: theme.dividerColor,
+                width: 1.5,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              // CALL columns (Ask, Bid)
+              Expanded(
+                flex: 2,
+                child: Row(
+                  children: [
+                    Expanded(child: _buildColumnHeaderText('Ask', theme)),
+                    Expanded(child: _buildColumnHeaderText('Bid', theme)),
+                  ],
+                ),
+              ),
+              
+              // Strike column (empty space, covered by main header)
+              const SizedBox(width: 100),
+              
+              // PUT columns (Bid, Ask)
+              Expanded(
+                flex: 2,
+                child: Row(
+                  children: [
+                    Expanded(child: _buildColumnHeaderText('Bid', theme)),
+                    Expanded(child: _buildColumnHeaderText('Ask', theme)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildHeaderCell(String text, double width, {bool isCenter = false}) {
-    return SizedBox(
-      width: width,
-      child: Text(
-        text,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-        textAlign: isCenter ? TextAlign.center : TextAlign.right,
+  Widget _buildColumnHeaderText(String text, ThemeData theme) {
+    return Text(
+      text,
+      style: theme.textTheme.labelMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: theme.colorScheme.onSurface.withOpacity(0.7),
       ),
+      textAlign: TextAlign.center,
     );
   }
 
@@ -393,28 +490,39 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
 
   Widget _buildTableRow(BuildContext context, StrikePriceData strike) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final call = strike.call;
     final put = strike.put;
+    final underlyingPrice = widget.optionChain.underlyingPrice;
     
-    Color? rowColor;
-    if (strike.isAtm) {
-      rowColor = theme.colorScheme.primary.withOpacity(0.1);
-    } else if (strike.isItm) {
-      rowColor = theme.colorScheme.secondary.withOpacity(0.05);
+    // Calculate ITM separately for CALL and PUT
+    // CALL is ITM when underlying > strike
+    // PUT is ITM when underlying < strike
+    final isCallItm = call != null && underlyingPrice > strike.strikePrice;
+    final isPutItm = put != null && underlyingPrice < strike.strikePrice;
+    
+    // Subtle ITM backgrounds (cream/beige)
+    Color? callBgColor;
+    Color? putBgColor;
+    
+    if (!strike.isAtm) {
+      if (isCallItm) {
+        callBgColor = isDark ? const Color(0xFF2A3A2E) : const Color(0xFFFFF8E1);
+      }
+      if (isPutItm) {
+        putBgColor = isDark ? const Color(0xFF3A2E2E) : const Color(0xFFFFF8E1);
+      }
     }
 
     return MouseRegion(
       onHover: (event) {
-        // Calculate position for floating widget
         final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
         if (renderBox != null) {
           final position = renderBox.globalToLocal(event.position);
-          
-          // Determine which side is being hovered based on mouse position
           final rowWidth = renderBox.size.width;
           final isCallSide = position.dx < rowWidth * 0.5;
           final side = isCallSide ? 'CE' : 'PE';
-          final price = isCallSide ? (call?.ltp ?? 0) : (put?.ltp ?? 0);
+          final price = isCallSide ? (call?.ask ?? call?.bid ?? 0) : (put?.ask ?? put?.bid ?? 0);
           
           _onRowHover(
             strike.strikePrice.toStringAsFixed(0),
@@ -425,23 +533,97 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
         }
       },
       child: Container(
-        color: rowColor,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            // PUT (requested order: Ask, Bid)
-            _buildInteractiveDataCell(put?.ask, 60),
-            _buildInteractiveDataCell(put?.bid, 60),
-
-            // Strike (center)
-            _buildStrikeCell(strike, 80, context),
-
-            // CALL (requested order: Ask, Bid)
-            _buildInteractiveDataCell(call?.ask, 60),
-            _buildInteractiveDataCell(call?.bid, 60),
-          ],
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: theme.dividerColor.withOpacity(0.3),
+              width: 0.5,
+            ),
+          ),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // CALL side (LEFT of strike)
+              Expanded(
+                flex: 2,
+                child: Container(
+                  color: callBgColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Row(
+                    children: [
+                      Expanded(child: _buildPremiumText(call?.ask, theme, isCall: true)),
+                      Expanded(child: _buildPremiumText(call?.bid, theme, isCall: true)),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Strike (center) - Distinct background
+              Container(
+                width: 100,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: strike.isAtm
+                      ? (isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE3F2FD))
+                      : (isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5)),
+                  border: strike.isAtm
+                      ? Border.all(
+                          color: theme.colorScheme.primary.withOpacity(0.6),
+                          width: 1.5,
+                        )
+                      : null,
+                ),
+                child: Text(
+                  strike.strikePrice.toStringAsFixed(0),
+                  style: TextStyle(
+                    fontWeight: strike.isAtm ? FontWeight.bold : FontWeight.w600,
+                    fontSize: strike.isAtm ? 13 : 12,
+                    color: strike.isAtm
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              
+              // PUT side (RIGHT of strike)
+              Expanded(
+                flex: 2,
+                child: Container(
+                  color: putBgColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Row(
+                    children: [
+                      Expanded(child: _buildPremiumText(put?.bid, theme, isCall: false)),
+                      Expanded(child: _buildPremiumText(put?.ask, theme, isCall: false)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPremiumText(double? price, ThemeData theme, {bool isCall = true}) {
+    final hasValue = price != null && price > 0;
+    
+    return Text(
+      // Remove ₹ from strike premiums (bid/ask) as requested
+      hasValue ? price!.toStringAsFixed(2) : '-',
+      style: TextStyle(
+        fontWeight: hasValue ? FontWeight.w600 : FontWeight.normal,
+        fontFamily: 'monospace',
+        fontSize: 12,
+        color: hasValue
+            ? (isCall ? Colors.green[800] : Colors.red[800])
+            : theme.colorScheme.onSurface.withOpacity(0.3),
+      ),
+      textAlign: TextAlign.center,
     );
   }
 
