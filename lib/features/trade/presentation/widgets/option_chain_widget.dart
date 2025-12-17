@@ -529,68 +529,67 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: tableHPad),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // CALL side (LEFT of strike) - NO extra padding so it aligns with headers
-                Container(
-                  width: premiumColWidth * 2,
-                  color: callBgColor,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
-                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(call?.ask, theme, isCall: true))),
-                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(call?.bid, theme, isCall: true))),
-                    ],
-                  ),
+          padding: const EdgeInsets.symmetric(horizontal: tableHPad, vertical: 10),
+          child: Row(
+            children: [
+              // CALL Ask - exact same structure as header
+              Container(
+                width: premiumColWidth,
+                color: callBgColor,
+                alignment: Alignment.center,
+                child: _buildPremiumText(call?.ask, theme, isCall: true),
+              ),
+              // CALL Bid - exact same structure as header
+              Container(
+                width: premiumColWidth,
+                color: callBgColor,
+                alignment: Alignment.center,
+                child: _buildPremiumText(call?.bid, theme, isCall: true),
+              ),
+              
+              // Strike (center) - Distinct background
+              Container(
+                width: strikeColWidth,
+                decoration: BoxDecoration(
+                  color: strike.isAtm
+                      ? (isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE3F2FD))
+                      : (isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5)),
+                  border: strike.isAtm
+                      ? Border.all(
+                          color: theme.colorScheme.primary.withOpacity(0.6),
+                          width: 1.5,
+                        )
+                      : null,
                 ),
-                
-                // Strike (center) - Distinct background
-                Container(
-                  width: strikeColWidth,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
+                alignment: Alignment.center,
+                child: Text(
+                  strike.strikePrice.toStringAsFixed(0),
+                  style: TextStyle(
+                    fontWeight: strike.isAtm ? FontWeight.bold : FontWeight.w600,
+                    fontSize: strike.isAtm ? 13 : 12,
                     color: strike.isAtm
-                        ? (isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE3F2FD))
-                        : (isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5)),
-                    border: strike.isAtm
-                        ? Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.6),
-                            width: 1.5,
-                          )
-                        : null,
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface,
                   ),
-                  child: Center(
-                    child: Text(
-                      strike.strikePrice.toStringAsFixed(0),
-                      style: TextStyle(
-                        fontWeight: strike.isAtm ? FontWeight.bold : FontWeight.w600,
-                        fontSize: strike.isAtm ? 13 : 12,
-                        color: strike.isAtm
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+                  textAlign: TextAlign.center,
                 ),
-                
-                // PUT side (RIGHT of strike) - NO extra padding so it aligns with headers
-                Container(
-                  width: premiumColWidth * 2,
-                  color: putBgColor,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    children: [
-                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(put?.bid, theme, isCall: false))),
-                      SizedBox(width: premiumColWidth, child: Center(child: _buildPremiumText(put?.ask, theme, isCall: false))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+              
+              // PUT Bid - exact same structure as header
+              Container(
+                width: premiumColWidth,
+                color: putBgColor,
+                alignment: Alignment.center,
+                child: _buildPremiumText(put?.bid, theme, isCall: false),
+              ),
+              // PUT Ask - exact same structure as header
+              Container(
+                width: premiumColWidth,
+                color: putBgColor,
+                alignment: Alignment.center,
+                child: _buildPremiumText(put?.ask, theme, isCall: false),
+              ),
+            ],
           ),
         ),
       ),
