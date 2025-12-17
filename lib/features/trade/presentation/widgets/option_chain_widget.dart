@@ -333,6 +333,8 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   Widget _buildTableHeader(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    const premiumColWidth = 90.0;
+    const strikeColWidth = 100.0;
     
     return Column(
       children: [
@@ -351,8 +353,8 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
           child: Row(
             children: [
               // CALL section header
-              Expanded(
-                flex: 2,
+              SizedBox(
+                width: premiumColWidth * 2,
                 child: Text(
                   'CALL',
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -366,7 +368,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
               
               // Strike section header
               SizedBox(
-                width: 100,
+                width: strikeColWidth,
                 child: Text(
                   'Strike',
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -378,8 +380,8 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
               ),
               
               // PUT section header
-              Expanded(
-                flex: 2,
+              SizedBox(
+                width: premiumColWidth * 2,
                 child: Text(
                   'PUT',
                   style: theme.textTheme.titleSmall?.copyWith(
@@ -408,30 +410,11 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
           ),
           child: Row(
             children: [
-              // CALL columns (Ask, Bid)
-              Expanded(
-                flex: 2,
-                child: Row(
-                  children: [
-                    Expanded(child: _buildColumnHeaderText('Ask', theme)),
-                    Expanded(child: _buildColumnHeaderText('Bid', theme)),
-                  ],
-                ),
-              ),
-              
-              // Strike column (empty space, covered by main header)
-              const SizedBox(width: 100),
-              
-              // PUT columns (Bid, Ask)
-              Expanded(
-                flex: 2,
-                child: Row(
-                  children: [
-                    Expanded(child: _buildColumnHeaderText('Bid', theme)),
-                    Expanded(child: _buildColumnHeaderText('Ask', theme)),
-                  ],
-                ),
-              ),
+              SizedBox(width: premiumColWidth, child: _buildColumnHeaderText('Ask', theme)),
+              SizedBox(width: premiumColWidth, child: _buildColumnHeaderText('Bid', theme)),
+              const SizedBox(width: strikeColWidth),
+              SizedBox(width: premiumColWidth, child: _buildColumnHeaderText('Bid', theme)),
+              SizedBox(width: premiumColWidth, child: _buildColumnHeaderText('Ask', theme)),
             ],
           ),
         ),
@@ -494,6 +477,8 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
     final call = strike.call;
     final put = strike.put;
     final underlyingPrice = widget.optionChain.underlyingPrice;
+    const premiumColWidth = 90.0;
+    const strikeColWidth = 100.0;
     
     // Calculate ITM separately for CALL and PUT
     // CALL is ITM when underlying > strike
@@ -546,23 +531,21 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // CALL side (LEFT of strike)
-              Expanded(
-                flex: 2,
-                child: Container(
-                  color: callBgColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  child: Row(
-                    children: [
-                      Expanded(child: _buildPremiumText(call?.ask, theme, isCall: true)),
-                      Expanded(child: _buildPremiumText(call?.bid, theme, isCall: true)),
-                    ],
-                  ),
+              Container(
+                width: premiumColWidth * 2,
+                color: callBgColor,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    SizedBox(width: premiumColWidth, child: _buildPremiumText(call?.ask, theme, isCall: true)),
+                    SizedBox(width: premiumColWidth, child: _buildPremiumText(call?.bid, theme, isCall: true)),
+                  ],
                 ),
               ),
               
               // Strike (center) - Distinct background
               Container(
-                width: 100,
+                width: strikeColWidth,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: strike.isAtm
@@ -589,17 +572,15 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
               ),
               
               // PUT side (RIGHT of strike)
-              Expanded(
-                flex: 2,
-                child: Container(
-                  color: putBgColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  child: Row(
-                    children: [
-                      Expanded(child: _buildPremiumText(put?.bid, theme, isCall: false)),
-                      Expanded(child: _buildPremiumText(put?.ask, theme, isCall: false)),
-                    ],
-                  ),
+              Container(
+                width: premiumColWidth * 2,
+                color: putBgColor,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                child: Row(
+                  children: [
+                    SizedBox(width: premiumColWidth, child: _buildPremiumText(put?.bid, theme, isCall: false)),
+                    SizedBox(width: premiumColWidth, child: _buildPremiumText(put?.ask, theme, isCall: false)),
+                  ],
                 ),
               ),
             ],
