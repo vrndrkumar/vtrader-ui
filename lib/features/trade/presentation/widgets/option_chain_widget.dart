@@ -482,9 +482,26 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
       );
     }
     
-    return Column(
-      children: widget.optionChain.strikes.map((strike) => _buildTableRow(context, strike)).toList(),
-    );
+    // Build rows with index price inserted between appropriate strikes
+    final underlyingPrice = widget.optionChain.underlyingPrice;
+    final rows = <Widget>[];
+    bool indexPriceInserted = false;
+    
+    for (int i = 0; i < widget.optionChain.strikes.length; i++) {
+      final strike = widget.optionChain.strikes[i];
+      
+      // Insert index price row before the strike that's just above the underlying price
+      if (!indexPriceInserted && 
+          underlyingPrice > 0 && 
+          strike.strikePrice > underlyingPrice) {
+        rows.add(_buildIndexPriceRow(context, underlyingPrice));
+        indexPriceInserted = true;
+      }
+      
+      rows.add(_buildTableRow(context, strike));
+    }
+    
+    return Column(children: rows);
   }
 
   Widget _buildTableRow(BuildContext context, StrikePriceData strike) {
@@ -562,33 +579,23 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
                 child: _buildPremiumText(call?.bid, theme, isCall: true),
               ),
               
-              // Strike (center) - Distinct background
-              Container(
-                width: strikeColWidth,
-                decoration: BoxDecoration(
-                  color: strike.isAtm
-                      ? (isDark ? const Color(0xFF1E3A5F) : const Color(0xFFE3F2FD))
-                      : (isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5)),
-                  border: strike.isAtm
-                      ? Border.all(
-                          color: theme.colorScheme.primary.withOpacity(0.6),
-                          width: 1.5,
-                        )
-                      : null,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  strike.strikePrice.toStringAsFixed(0),
-                  style: TextStyle(
-                    fontWeight: strike.isAtm ? FontWeight.bold : FontWeight.w600,
-                    fontSize: strike.isAtm ? 13 : 12,
-                    color: strike.isAtm
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface,
+                // Strike (center) - Distinct background (removed blue ATM border)
+                Container(
+                  width: strikeColWidth,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1A1F2E) : const Color(0xFFF5F5F5),
                   ),
-                  textAlign: TextAlign.center,
+                  alignment: Alignment.center,
+                  child: Text(
+                    strike.strikePrice.toStringAsFixed(0),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
               
               // PUT Bid - exact same structure as header
               Container(
@@ -626,6 +633,53 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
             : theme.colorScheme.onSurface.withOpacity(0.3),
       ),
       textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildIndexPriceRow(BuildContext context, double underlyingPrice) {
+    final theme = Theme.of(context);
+    const premiumColWidth = 90.0;
+    const strikeColWidth = 100.0;
+    const tableHPad = 16.0;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: tableHPad, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Colors.red.shade400, width: 2),
+          bottom: BorderSide(color: Colors.red.shade400, width: 2),
+        ),
+        color: Colors.red.shade50.withOpacity(0.3),
+      ),
+      child: Row(
+        children: [
+          // Empty space for CALL columns
+          Container(width: premiumColWidth * 2),
+          
+          // Index price in center
+          Container(
+            width: strikeColWidth,
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  underlyingPrice.toStringAsFixed(2),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.red.shade700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          
+          // Empty space for PUT columns
+          Container(width: premiumColWidth * 2),
+        ],
+      ),
     );
   }
 
