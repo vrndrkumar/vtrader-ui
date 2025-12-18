@@ -112,17 +112,8 @@ class OptionChainWebSocketService {
       }
 
       if (bytes != null) {
-        debugPrint('📦 WebSocket: Received binary message (${bytes.length} bytes) type=${message.runtimeType}');
-
         // Decode Protobuf message
         final optionChain = OptionChain.fromBuffer(bytes);
-
-        debugPrint('📊 WebSocket: Decoded ${optionChain.options.length} option data points');
-        final takeN = optionChain.options.length < 5 ? optionChain.options.length : 5;
-        for (var i = 0; i < takeN; i++) {
-          final o = optionChain.options[i];
-          debugPrint('📊 WS[$i]: strike=${o.strikePrice}, type="${o.optionType}", bid=${o.bid}, ask=${o.ask}');
-        }
 
         // Emit to stream
         _optionChainController.add(optionChain);

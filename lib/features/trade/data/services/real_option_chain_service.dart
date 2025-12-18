@@ -94,7 +94,7 @@ class RealOptionChainService {
   void _handleProtobufData(proto.OptionChain protobufChain) {
     try {
       // Confirm data is arriving from socket:
-      debugPrint('✅ RealOptionChainService: protobuf received, options=${protobufChain.options.length}');
+      // Protobuf received - processing silently
 
       if (protobufChain.options.isEmpty) {
         return;

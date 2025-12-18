@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:resizable_widget/resizable_widget.dart';
 import '../widgets/option_chain_widget.dart';
-import '../widgets/chart_widget.dart';
+import '../widgets/realtime_chart_widget.dart';
 import '../widgets/positions_orders_widget.dart';
 import '../../data/services/mock_market_data_service.dart';
 import '../../data/services/real_option_chain_service.dart';
@@ -250,77 +250,97 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
           orElse: () => masterDataState.indices.first,
         );
         ref.read(selectedIndexProvider.notifier).state = defaultIndex;
-        if (mounted) {
-          setState(() {
-            _selectedIndex = defaultIndex.symbolCode;
-          });
-        }
-        // Keep other panels (chart/positions/orders) updated; does NOT touch option-chain data.
-        _loadInitialData();
         
         // Get expiry dates in both formats
         final expiryDates = defaultIndex.expiryDates;
         debugPrint('📅 Available ${expiryDates.length} expiry dates');
         
+        String? dropdownExpiry;
+        String? apiExpiry;
+        
         if (expiryDates.isNotEmpty) {
           final firstDate = expiryDates.first;
           
           // Convert to dropdown format: DD/MM/YYYY
-          final dropdownExpiry = '${firstDate.day.toString().padLeft(2, '0')}/${firstDate.month.toString().padLeft(2, '0')}/${firstDate.year}';
+          dropdownExpiry = '${firstDate.day.toString().padLeft(2, '0')}/${firstDate.month.toString().padLeft(2, '0')}/${firstDate.year}';
           
           // Convert to API format: DDMMMYY (e.g., 14OCT25)
-          final apiExpiry = defaultIndex.formattedExpiryDates.first;
+          apiExpiry = defaultIndex.formattedExpiryDates.first;
           
           debugPrint('📅 Setting expiry: API=$apiExpiry, Dropdown=$dropdownExpiry');
-          
-          setState(() {
-            _selectedExpiry = dropdownExpiry;
-          });
           ref.read(selectedExpiryProvider.notifier).state = dropdownExpiry;
-          
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            debugPrint('📡 Subscribing to: ${defaultIndex.symbolCode} - $apiExpiry');
-            _subscribeToOptionChain(defaultIndex.symbolCode, apiExpiry);
-          });
         } else {
           debugPrint('⚠️ No expiries available for ${defaultIndex.symbolCode}');
         }
+        
+        // Defer all setState calls until after build phase
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _selectedIndex = defaultIndex.symbolCode;
+              if (dropdownExpiry != null) {
+                _selectedExpiry = dropdownExpiry;
+              }
+            });
+            // Keep other panels (chart/positions/orders) updated
+            _loadInitialData();
+            
+            // Subscribe to WebSocket
+            if (apiExpiry != null) {
+              debugPrint('📡 Subscribing to: ${defaultIndex.symbolCode} - $apiExpiry');
+              _subscribeToOptionChain(defaultIndex.symbolCode, apiExpiry);
+            }
+          }
+        });
       } else {
         // Sync local selected index with provider (do not clear option chain).
-        if (_selectedIndex != selectedIndex.symbolCode && mounted) {
-          setState(() {
-            _selectedIndex = selectedIndex.symbolCode;
-          });
-          _loadInitialData();
-        }
+        final needsUpdate = _selectedIndex != selectedIndex.symbolCode;
 
         // Subscribe to WebSocket for currently selected index/expiry
         final expiryDates = selectedIndex.expiryDates;
         debugPrint('📅 Index already selected: ${selectedIndex.symbolCode}, ${expiryDates.length} expiries');
         
+        String? dropdownExpiry;
+        String? apiExpiry;
+        
         if (expiryDates.isNotEmpty) {
           // Use first expiry if none selected
           if (_selectedExpiry == null) {
             final firstDate = expiryDates.first;
-            final dropdownExpiry = '${firstDate.day.toString().padLeft(2, '0')}/${firstDate.month.toString().padLeft(2, '0')}/${firstDate.year}';
-            
-            setState(() {
-              _selectedExpiry = dropdownExpiry;
-            });
+            dropdownExpiry = '${firstDate.day.toString().padLeft(2, '0')}/${firstDate.month.toString().padLeft(2, '0')}/${firstDate.year}';
             ref.read(selectedExpiryProvider.notifier).state = dropdownExpiry;
+          } else {
+            dropdownExpiry = _selectedExpiry;
           }
           
-          final apiExpiry = _convertDropdownToApiExpiry(_selectedExpiry!);
-          
-          debugPrint('📅 Using expiry: Dropdown=$_selectedExpiry, API=$apiExpiry');
-          
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            debugPrint('📡 Subscribing to: ${selectedIndex.symbolCode} - $apiExpiry');
-            _subscribeToOptionChain(selectedIndex.symbolCode, apiExpiry);
-          });
+          apiExpiry = _convertDropdownToApiExpiry(dropdownExpiry!);
+          debugPrint('📅 Using expiry: Dropdown=$dropdownExpiry, API=$apiExpiry');
         } else {
           debugPrint('⚠️ No expiries available for ${selectedIndex.symbolCode}');
         }
+        
+        // Defer all setState calls until after build phase
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            if (needsUpdate) {
+              setState(() {
+                _selectedIndex = selectedIndex.symbolCode;
+              });
+              _loadInitialData();
+            }
+            if (dropdownExpiry != null && _selectedExpiry == null) {
+              setState(() {
+                _selectedExpiry = dropdownExpiry;
+              });
+            }
+            
+            // Subscribe to WebSocket
+            if (apiExpiry != null) {
+              debugPrint('📡 Subscribing to: ${selectedIndex.symbolCode} - $apiExpiry');
+              _subscribeToOptionChain(selectedIndex.symbolCode, apiExpiry);
+            }
+          }
+        });
       }
     }
   }
@@ -381,13 +401,11 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         (optionChain) {
           if (mounted) {
             if (optionChain != null) {
-              debugPrint('📊 TradePage: Received option chain with ${optionChain.strikes.length} strikes');
               setState(() {
                 _optionChain = optionChain;
               });
             } else {
               // When null is received, use empty option chain to keep table visible
-              debugPrint('📊 TradePage: No data received, showing empty option chain');
               setState(() {
                 _optionChain = _createEmptyOptionChain();
               });
@@ -662,11 +680,7 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
                     );
                   },
                 ),
-                ChartWidget(
-                  candleData: _candleData,
-                  symbol: _selectedIndex,
-                  onRefresh: _refreshData,
-                ),
+                const RealtimeChartWidget(),
                 PositionsOrdersWidget(
                   positions: _positions,
                   orders: _orders,
@@ -728,13 +742,8 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
               }
             },
             children: [
-              // Top Right - Chart
-              ChartWidget(
-                key: ValueKey('chart_$_selectedIndex'),
-                candleData: _candleData,
-                symbol: _selectedIndex,
-                onRefresh: _refreshData,
-              ),
+              // Top Right - Chart (Real-time)
+              const RealtimeChartWidget(),
               
               // Bottom Right - Positions/Orders
               PositionsOrdersWidget(

@@ -38,9 +38,6 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Remove changing key to prevent widget recreation and scroll jump
-    print('OptionChainWidget build called for ${widget.optionChain.underlying} with ${widget.optionChain.strikes.length} strikes');
-    
     return MouseRegion(
       onExit: (_) {
         setState(() {
