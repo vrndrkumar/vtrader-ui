@@ -39,7 +39,8 @@ dependencies:
   
   # Charts
   fl_chart: ^0.65.0
-  candlesticks: ^2.1.0
+  candlesticks:
+    path: packages/candlesticks
   
   # Resizable panels
   resizable_widget: ^1.0.5

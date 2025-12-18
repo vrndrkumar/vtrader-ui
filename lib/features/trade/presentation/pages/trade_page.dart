@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:resizable_widget/resizable_widget.dart';
 import '../widgets/option_chain_widget.dart';
@@ -49,6 +50,20 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
   
   double _horizontalRatio = 0.4; // Left panel width ratio (Option Chain)
   double _verticalRatio = 0.7; // Top right panel height ratio (Chart vs Positions)
+
+  /// Prevent `setState()` being called while a frame is building (ResizableWidget triggers callbacks during layout).
+  void _safeSetState(VoidCallback fn) {
+    if (!mounted) return;
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.persistentCallbacks ||
+        phase == SchedulerPhase.midFrameMicrotasks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(fn);
+      });
+    } else {
+      setState(fn);
+    }
+  }
 
   @override
   void initState() {
@@ -705,7 +720,7 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
         percentages: [_horizontalRatio, 1 - _horizontalRatio],
         onResized: (info) {
           if (info.isNotEmpty) {
-            setState(() {
+            _safeSetState(() {
               _horizontalRatio = info[0].percentage;
             });
             _savePanelSizes();
@@ -735,7 +750,7 @@ class _TradePageState extends ConsumerState<TradePage> with TickerProviderStateM
             percentages: [_verticalRatio, 1 - _verticalRatio],
             onResized: (info) {
               if (info.isNotEmpty) {
-                setState(() {
+                _safeSetState(() {
                   _verticalRatio = info[0].percentage;
                 });
                 _savePanelSizes();
