@@ -309,8 +309,7 @@ class _RealtimeChartWidgetState extends ConsumerState<RealtimeChartWidget> {
       );
     }
 
-    // Convert to candlesticks package format
-    // Note: candlesticks package expects data in reverse order (newest first)
+    // Convert to candlesticks package format (newest first)
     final candles = _candleData.reversed.map((data) => Candle(
       date: data.time,
       high: data.high,
@@ -326,7 +325,7 @@ class _RealtimeChartWidgetState extends ConsumerState<RealtimeChartWidget> {
         candles: candles,
         onLoadMoreCandles: () async {
           // Future: implement pagination
-          return;
+          return Future.value();
         },
       ),
     );
