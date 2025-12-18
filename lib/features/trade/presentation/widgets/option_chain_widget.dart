@@ -26,11 +26,19 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
   double? _hoveredPrice;
   Offset? _hoverPosition;
   String? _currentHoveredRow; // Track which row is currently hovered
+  
+  // ScrollController to maintain scroll position across data updates
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Create a unique key based on option chain data
-    final dataKey = '${widget.optionChain.underlying}_${widget.optionChain.underlyingPrice}_${widget.optionChain.strikes.length}';
+    // Remove changing key to prevent widget recreation and scroll jump
     print('OptionChainWidget build called for ${widget.optionChain.underlying} with ${widget.optionChain.strikes.length} strikes');
     
     return MouseRegion(
@@ -47,7 +55,7 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
         clipBehavior: Clip.none,
         children: [
           Container(
-            key: ValueKey(dataKey),
+            // Removed ValueKey to prevent recreation on data updates
             constraints: const BoxConstraints(minWidth: 300), // Minimum width
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
@@ -329,13 +337,14 @@ class _OptionChainWidgetState extends ConsumerState<OptionChainWidget> {
             child: _buildTableHeader(context),
           ),
         ),
-        // Scrollable data rows
+        // Scrollable data rows with persistent scroll position
         Expanded(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: ConstrainedBox(
               constraints: const BoxConstraints(minWidth: minTableWidth),
               child: SingleChildScrollView(
+                controller: _scrollController, // Maintain scroll position
                 child: _buildTableRows(context),
               ),
             ),
